@@ -11,7 +11,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.lang.Exception;
 
 
-
 class MulticastReceiveThread extends Thread {
 
     private MulticastSocket socket;
@@ -144,8 +143,12 @@ class MulticastReceiveThread extends Thread {
                     rt.start();
                 }
                 else if(splited[0].equals("GET_NEWS_FROM")) {
-                    NewsThread nt = NewsThread(splited, tabela);
+                    NewsThread nt = new NewsThread(splited, tabela, 0);
                     nt.start();
+                }
+                else if(splited[0].equals("NEWS_FOR")) {
+                    NewsThread nt2 = new NewsThread(splited, tabela, 1);
+                    nt2.start();
                 }
             }
         } catch (Exception io) {

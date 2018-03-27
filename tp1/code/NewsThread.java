@@ -119,10 +119,10 @@ class NewsThread extends Thread {
                         so.close();
                     }
                     else if (tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
-                        InetAddress sip = InetAddress.getByName(data[1]);
                         Socket s = new Socket("localhost", 9999);
                         PrintWriter out = new PrintWriter(s.getOutputStream(), true);
                         out.println("NEWS_FOR " + dataTcp);
+                        s.close();
                     }
                     else if(!tabela.containsKey(dip)) {
                         int tempo = 200;
@@ -198,7 +198,6 @@ class NewsThread extends Thread {
                 }
                 else if (tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
                     try {
-                        InetAddress sip = InetAddress.getByName(data[1]);
                         Socket s = new Socket("localhost", 9999);
                         PrintWriter out = new PrintWriter(s.getOutputStream(), true);
                         out.println("GET_NEWS_FROM " + source + " " + dest);

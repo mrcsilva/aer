@@ -3,21 +3,24 @@ import java.net.Socket;
 import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.io.DataOutputStream;
-
+import java.io.PrintWriter;
+import java.util.Enumeration;
+import java.net.NetworkInterface;
+import java.net.InetAddress;
+import java.lang.Exception;
 
 class Cliente {
 
 
-	public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws Exception {
 
 
-			Socket socket;
-			String ip;
+            String ip;
 
-			int opcao = 1;
+            int opcao = 1;
             Scanner reader = new Scanner(System.in);
 
-          	while(opcao != 0) {
+              while(opcao != 0) {
                 System.out.println("\nOpções");
                 System.out.println("1 - Enviar GET_NEWS_FROM");
                 System.out.println("0 - Sair\n");
@@ -27,17 +30,16 @@ class Cliente {
                     case 0: System.exit(0);
                             break;
                     case 1: System.out.println("Insira o endereço que pretende receber noticias:");
-                    		ip = reader.nextLine();
-                    		socket = new Socket("localhost",9999);
-                    		GetNewsThread gn = new GetNewsThread(socket,ip);
-        					gn.start();
+                            ip = reader.nextLine();
+                            GetNewsThread gn = new GetNewsThread(ip);
+                            gn.start();
                             break;
                     default: System.out.println("Opção inválida!");
                 }
             }
             reader.close();
 
-	}
+    }
 }
 
 
@@ -49,39 +51,48 @@ class GetNewsThread extends Thread{
     private String ip;
 
 
-    public GetNewsThread(Socket socket,String ip) {
-    	this.socket = socket;
-    	this.ip = ip;
-        
+    public GetNewsThread(String ip) {
+        this.ip = ip;
     }
 
      @Override
     public void run() {
+        String source = "";
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                // filters out 127.0.0.1 and inactive interfaces
+                if (iface.isLoopback() || !iface.isUp())
+                    continue;
 
-
-    	String news;
-
-        String data = "GET_NEWS_FROM " + this.ip + "\n";
-
-        try{	
-        DataOutputStream send = new DataOutputStream(socket.getOutputStream());
-        BufferedReader receive = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        send.writeBytes(data);
-
-        socket.setSoTimeout(5000);
-
-        news = receive.readLine();
-        if(news.equals("Non Reachable")){
-        	System.out.println(ip + " : " + news + "\n");
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while(addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if(addr.isLinkLocalAddress()){
+                        source = InetAddress.getByName(addr.getHostAddress().split("\\%")[0]).getHostAddress();
+                    }
+                }
+            }
         }
-        else{
-        	System.out.println("News From " + ip + " = " + news + "\n");
+        catch (Exception e) {
+            // throw new RuntimeException(e);
         }
-        socket.shutdownOutput();
-        socket.shutdownInput();
-        socket.close();
 
-    	}catch(Exception e){}
 
-	}
+        String data = "GET_NEWS_FROM " + source + " " + this.ip;
+
+        try{
+            socket = new Socket("localhost",9999);
+            PrintWriter send = new PrintWriter(socket.getOutputStream(), true);
+            send.println(data);
+            System.out.println("Sent: " + data);
+            socket.close();
+
+        }
+        catch(Exception e){
+            System.out.println("Erro! " + e.getMessage());
+        }
+
+    }
 }

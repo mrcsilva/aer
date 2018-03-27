@@ -54,8 +54,6 @@ class RouteThread extends Thread {
                     addNo.setIp(ip);
                     addNo.setIpVizinho(source);
                     tabela.put(ip, addNo);
-                    PrintThread pr = new PrintThread(tabela);
-                    pr.start();
                     RequestTimeoutThread rt = new RequestTimeoutThread(Integer.parseInt(data[4]), tabela, ip);
                     DatagramPacket p = newDatagram(data, group, 1);
                     socket.send(p);

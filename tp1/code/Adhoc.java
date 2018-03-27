@@ -59,16 +59,21 @@ class Adhoc {
         tt.start();
         int op = -1;
         Scanner s = new Scanner(System.in);
-        while(op!=0){
+        do {
+            System.out.println("------OPCOES------");
+            System.out.println("1 - Imprimir tabela de encaminhamento");
+            System.out.println("0 - Sair");
             op = s.nextInt();
-            if(op == 1) {
-                PrintThread pt = new PrintThread(tabela);
-                pt.start();
+            switch(op) {
+                case 1: PrintThread pt = new PrintThread(tabela);
+                        pt.start();
+                        break;
+                case 0: hs.interrupt();
+                        mr.interrupt();
+                        tt.interrupt();
+                        break;
             }
-        }
-        hs.interrupt();
-        mr.interrupt();
-        tt.interrupt();
+        } while (op != 0);
         System.exit(0);
     }
 }

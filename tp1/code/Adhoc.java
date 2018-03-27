@@ -13,6 +13,7 @@ import java.lang.Exception;
 import java.net.SocketException;
 import java.lang.RuntimeException;
 import java.net.DatagramPacket;
+import java.util.Scanner;
 
 class Adhoc {
 
@@ -56,10 +57,18 @@ class Adhoc {
 
         TCPThread tt = new TCPThread(tabela);
         tt.start();
-
-        while(hs.isAlive() || mr.isAlive() || tt.isAlive()){
-            Thread.sleep(5*60*1000);
+        int op = -1;
+        Scanner s = new Scanner(System.in);
+        while(op!=0){
+            op = s.nextInt();
+            if(op == 1) {
+                PrintThread pt = new PrintThread(tabela);
+                pt.start();
+            }
         }
-
+        hs.interrupt();
+        mr.interrupt();
+        tt.interrupt();
+        System.exit(0);
     }
 }

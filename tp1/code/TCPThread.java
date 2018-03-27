@@ -42,7 +42,7 @@ class TCPThread extends Thread {
                     }
                 }
                 String data = "ROUTE_REQUEST " + source + " " + ip.getHostAddress() + " " + saltos + " " + t;
-                System.out.println(data);
+                // System.out.println(data);
                 byte[] buf = new byte[500];
                 buf = data.getBytes();
                 DatagramPacket p = new DatagramPacket(buf, buf.length, group, 9999);
@@ -85,7 +85,7 @@ class TCPThread extends Thread {
                 socket = ss.accept();
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 re = in.readLine();
-                System.out.println("Received: " + re);
+                // System.out.println("Received: " + re);
                 socket.shutdownOutput();
                 socket.shutdownInput();
                 socket.close();
@@ -123,7 +123,7 @@ class TCPThread extends Thread {
                             packet = new DatagramPacket(b, b.length, group, 9999);
                             ms.send(packet);
                             ms.leaveGroup(group);
-                            System.out.println("Sent NEWS_FOR: " + data);
+                            // System.out.println("Sent NEWS_FOR: " + data);
                         }
                         else {
                             int tempo = 200;
@@ -164,7 +164,7 @@ class TCPThread extends Thread {
                                 packet = new DatagramPacket(b, b.length, group, 9999);
                                 ms.send(packet);
                                 ms.leaveGroup(group);
-                                System.out.println("Sent NEWS_FOR: " + data);
+                                // System.out.println("Sent NEWS_FOR: " + data);
                             }
                         }
                     }
@@ -188,7 +188,7 @@ class TCPThread extends Thread {
                         packet = new DatagramPacket(b, b.length, group, 9999);
                         ms.send(packet);
                         ms.leaveGroup(group);
-                        System.out.println("Sent GET_NEWS_FROM: " + data);
+                        // System.out.println("Sent GET_NEWS_FROM: " + data);
                     }
                     catch(Exception e) {
                         System.out.println("TCP GET Contem: " + e.getMessage());
@@ -235,7 +235,7 @@ class TCPThread extends Thread {
                             packet = new DatagramPacket(b, b.length, group, 9999);
                             ms.send(packet);
                             ms.leaveGroup(group);
-                            System.out.println("Sent GET_NEWS_FROM: " + data);
+                            // System.out.println("Sent GET_NEWS_FROM: " + data);
                         }
                         else {
                             Socket s = new Socket("localhost", 9999);
@@ -257,7 +257,7 @@ class TCPThread extends Thread {
                 for(int i = 1; i < re.split(" ").length; i++) {
                     temp += re.split(" ")[i];
                 }
-                System.out.println("Got News!\nNews:\n\t" + temp);
+                // System.out.println("Got News!\nNews:\n\t" + temp);
             }
         }
     }

@@ -35,7 +35,7 @@ class HelloReceiveThread extends Thread {
 
             if(this.tabela.containsKey(list.get(i))){
                 this.tabela.remove(list.get(i));
-                System.out.println("No removido: " + list.get(i));
+                // System.out.println("No removido: " + list.get(i));
             }
         }
     }
@@ -68,7 +68,7 @@ class HelloReceiveThread extends Thread {
                 }
             }
         } catch (Exception io) {
-            
+
         }
     }
 }

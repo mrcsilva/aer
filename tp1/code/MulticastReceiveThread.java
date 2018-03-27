@@ -44,7 +44,7 @@ class MulticastReceiveThread extends Thread {
             if(!tabela.containsKey(ipSalto)){
                 No no = new No(ipSalto, ipVizinho, 2, null, 0);
                 tabela.put(ipSalto,no);
-                System.out.println("Nó Adicionado: " + ipSalto);
+                // System.out.println("Nó Adicionado: " + ipSalto);
             }
                 else if (tabela.get(ipSalto).getSaltos()==2){
                     tabela.get(ipSalto).setIpVizinho(ipVizinho);
@@ -75,7 +75,7 @@ class MulticastReceiveThread extends Thread {
 
             for(String s : listNos){
                 try{
-                    System.out.println("No removido: "+s);
+                    // System.out.println("No removido: "+s);
                     this.tabela.remove(InetAddress.getByName(s));
                 }
                 catch(Exception e){}
@@ -121,7 +121,7 @@ class MulticastReceiveThread extends Thread {
                         HelloReceiveThread h = new HelloReceiveThread(ip,tabela,queueH);
                         h.start();
 
-                        System.out.println("Nó Adicionado: " + ip.getHostAddress());
+                        // System.out.println("Nó Adicionado: " + ip.getHostAddress());
                     }
 
                     if(tabela.containsKey(ip)){

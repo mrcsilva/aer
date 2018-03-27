@@ -58,14 +58,14 @@ class RouteThread extends Thread {
                     DatagramPacket p = newDatagram(data, group, 1);
                     socket.send(p);
                     rt.start();
-                    System.out.println("RRQ Sent : " + concat(data));
+                    // System.out.println("RRQ Sent : " + concat(data));
                 }
                 else if(tabela.get(ip).getSaltos() != -1 && tabela.get(ip).getSaltos() < 3) {
                     String next = source.getHostAddress();
                     String resp[] = {"ROUTE_REPLY " + next + " " + tabela.get(ip).getSaltos() + " " + ip.getHostAddress()};
                     DatagramPacket p = newDatagram(resp, group, 0);
                     socket.send(p);
-                    System.out.println("RRP Sent: " + resp[0]);
+                    // System.out.println("RRP Sent: " + resp[0]);
                 }
                 else if(tabela.get(ip).getSaltos() != -1 && tabela.get(ip).getSaltos() > 2 && !data[3].equals("0")){
                     No n = tabela.get(ip);
@@ -82,7 +82,7 @@ class RouteThread extends Thread {
                         String resp[] = {"ROUTE_REPLY " + next + " " + n.getSaltos() + " " + ip.getHostAddress()};
                         DatagramPacket p = newDatagram(resp, group, 0);
                         socket.send(p);
-                        System.out.println("RRP Sent: " + resp[0]);
+                        // System.out.println("RRP Sent: " + resp[0]);
                     }
                 }
             }
@@ -109,7 +109,7 @@ class RouteThread extends Thread {
                         resp[0] = data[0]+" "+next+" "+(saltos+1)+" "+data[3];
                         DatagramPacket p = newDatagram(resp, group, 0);
                         socket.send(p);
-                        System.out.println("RRP Sent: " + resp[0]);
+                        // System.out.println("RRP Sent: " + resp[0]);
                     }
                 }
             }

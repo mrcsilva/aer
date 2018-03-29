@@ -11,15 +11,22 @@ import java.net.ServerSocket;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.lang.InterruptedException;
+import java.util.HashMap;
 
 class TCPThread extends Thread {
 
     private Map<InetAddress, No> tabela;
     private ServerSocket ss;
     private MulticastSocket ms;
+    private Map<String, Socket> soMap = new HashMap<>();
+    private String noticia = "";
 
     public TCPThread(Map<InetAddress, No> tabela) {
         this.tabela = tabela;
+    }
+
+    public void setNoticia(String noticia) {
+        this.noticia = noticia;
     }
 
     // Envia ROUTE_REQUEST
@@ -59,7 +66,7 @@ class TCPThread extends Thread {
 
     @Override
     public void run() {
-        Socket socket;
+        Socket socket = null;
         BufferedReader in;
         String re = "";
         InetAddress group = null;
@@ -86,9 +93,6 @@ class TCPThread extends Thread {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 re = in.readLine();
                 // System.out.println("Received: " + re);
-                socket.shutdownOutput();
-                socket.shutdownInput();
-                socket.close();
             }
             catch(IOException e) {
                 System.out.println("Socket Accept: ");
@@ -118,7 +122,7 @@ class TCPThread extends Thread {
                                     break;
                                 }
                             }
-                            data = "NEWS_FOR " + dest + " " + source + " " + viz + " " + "Almeida\n";
+                            data = "NEWS_FOR " + dest + " " + source + " " + viz + " " + noticia;
                             b = data.getBytes();
                             packet = new DatagramPacket(b, b.length, group, 9999);
                             ms.send(packet);
@@ -159,7 +163,7 @@ class TCPThread extends Thread {
                                         break;
                                     }
                                 }
-                                data = "NEWS_FOR " + dest + " " + source + " " + viz + " " + "Almeida\n";
+                                data = "NEWS_FOR " + dest + " " + source + " " + viz + " " + noticia;
                                 b = data.getBytes();
                                 packet = new DatagramPacket(b, b.length, group, 9999);
                                 ms.send(packet);
@@ -174,6 +178,7 @@ class TCPThread extends Thread {
                     }
                 }
                 else if (tabela.containsKey(dip) && tabela.get(dip).getSaltos() != 0) {
+                    soMap.put(dest, socket);
                     try {
                         viz = "";
                         // Obtem o seu próprio endereço e o do vizinho
@@ -222,6 +227,7 @@ class TCPThread extends Thread {
                     try {
                         // Se o encontrou ou não
                         if(saltos <= 38 && tempo <= 5000) {
+                            soMap.put(dest, socket);
                             viz = "";
                             // Obtem o ip do vizinho e dele próprio
                             for(No n : tabela.values()) {
@@ -254,8 +260,20 @@ class TCPThread extends Thread {
             }
             else if(re.split(" ")[0].equals("NEWS_FOR")) {
                 String temp = "";
-                for(int i = 1; i < re.split(" ").length; i++) {
+                for(int i = 2; i < re.split(" ").length; i++) {
                     temp += re.split(" ")[i];
+                }
+                Socket se = soMap.get(re.split(" ")[1]);
+                System.out.println(re);
+                try {
+                    PrintWriter out = new PrintWriter(se.getOutputStream(), true);
+                    out.println(temp);
+                    se.close();
+                    soMap.remove(re.split(" ")[1]);
+                }
+                catch(Exception e) {
+                    System.out.println("Erro ao enviar noticias!");
+                    e.printStackTrace();
                 }
                 // System.out.println("Got News!\nNews:\n\t" + temp);
             }

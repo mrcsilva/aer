@@ -24,7 +24,7 @@ class MulticastReceiveThread extends Thread {
   }
 
 
-    public void addNos(InetAddress ipVizinho ,String hello) throws IOException{
+    public void addNos(InetAddress ipVizinho, String hello) throws IOException {
 
         //int k=0;
         String[] splited = hello.split("\\s+");
@@ -46,41 +46,41 @@ class MulticastReceiveThread extends Thread {
                 tabela.put(ipSalto,no);
                 // System.out.println("Nó Adicionado: " + ipSalto);
             }
-                else if (tabela.get(ipSalto).getSaltos()==2){
-                    tabela.get(ipSalto).setIpVizinho(ipVizinho);
-                }
+            else if (tabela.get(ipSalto).getSaltos() > 2){
+                tabela.get(ipSalto).setIpVizinho(ipVizinho);
+            }
+        }
+    }
+
+    public void removeNos(InetAddress ipVizinho ,String hello){
+
+        String[] splited = hello.split("\\s+");
+
+        List<String> listNos= new ArrayList<String>();
+        List<String> listHel= new ArrayList<String>();
+
+        for (No no : this.tabela.values()){
+            if(no.getIpVizinho().equals(ipVizinho) && !no.getIp().equals(ipVizinho) && no.getSaltos() < 3 && no.getSaltos() != -1){
+                String[] splited2 = no.getIp().getHostAddress().split("\\%");
+                listNos.add(splited2[0]);
             }
         }
 
-        public void removeNos(InetAddress ipVizinho ,String hello){
-
-            String[] splited = hello.split("\\s+");
-
-            List<String> listNos= new ArrayList<String>();
-            List<String> listHel= new ArrayList<String>();
-
-            for (No no : this.tabela.values()){
-                if(no.getIpVizinho().equals(ipVizinho) && !no.getIp().equals(ipVizinho) && no.getSaltos() < 3 && no.getSaltos() != -1){
-                    String[] splited2 = no.getIp().getHostAddress().split("\\%");
-                    listNos.add(splited2[0]);
-                }
-            }
-
-            for(int i=1; i < splited.length;i++){
-                String[] splited3 = splited[i].split("\\%");
-                listHel.add(splited3[0]);
-            }
-
-            listNos.removeAll(listHel);
-
-            for(String s : listNos){
-                try{
-                    // System.out.println("No removido: "+s);
-                    this.tabela.remove(InetAddress.getByName(s));
-                }
-                catch(Exception e){}
-            }
+        for(int i=1; i < splited.length;i++){
+            String[] splited3 = splited[i].split("\\%");
+            listHel.add(splited3[0]);
         }
+
+        listNos.removeAll(listHel);
+
+        for(String s : listNos){
+            try{
+                // System.out.println("No removido: "+s);
+                this.tabela.remove(InetAddress.getByName(s));
+            }
+            catch(Exception e){}
+        }
+    }
 
 
 
@@ -90,7 +90,6 @@ class MulticastReceiveThread extends Thread {
             socket = new MulticastSocket(9999);
             InetAddress group = InetAddress.getByName("FF02::1");
             socket.joinGroup(group);
-            buf = new byte[256];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             No no;
 
@@ -105,7 +104,7 @@ class MulticastReceiveThread extends Thread {
                 String[] splited = data.split("\\s+");
 
                 if(splited[0].equals(dataH)){
-                    if(tabela.containsKey(ip) && tabela.get(ip).getSaltos() == 2){
+                    if(tabela.containsKey(ip) && tabela.get(ip).getSaltos() >= 2){
                         tabela.remove(ip);
                      }
 
@@ -153,6 +152,7 @@ class MulticastReceiveThread extends Thread {
             }
         } catch (Exception io) {
             System.out.println("EERRO " + io.getMessage());
+            io.printStackTrace();
         }
 
     }

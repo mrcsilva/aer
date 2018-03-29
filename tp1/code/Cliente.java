@@ -85,10 +85,13 @@ class GetNewsThread extends Thread{
         try{
             socket = new Socket("localhost",9999);
             PrintWriter send = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             send.println(data);
             System.out.println("Sent: " + data);
+            socket.setSoTimeout(10000);
+            String temp = in.readLine();
+            System.out.println("Got news from: " + ip + "!\nNews:\n\t" + temp);
             socket.close();
-
         }
         catch(Exception e){
             System.out.println("Erro! " + e.getMessage());

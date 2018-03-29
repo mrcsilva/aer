@@ -50,6 +50,7 @@ class RouteThread extends Thread {
             // ROUTE_REQUEST IP_ORIGEM IP_DESTINO SALTOS TEMPO
             if(data[0].equals("ROUTE_REQUEST")) {
                 InetAddress ip = InetAddress.getByName(data[2]);
+                // Se não estiver na tabela e ainda tiver saltos para fazer
                 if(!tabela.containsKey(ip) && !data[3].equals("0")) {
                     addNo.setIp(ip);
                     addNo.setIpVizinho(source);
@@ -60,15 +61,18 @@ class RouteThread extends Thread {
                     rt.start();
                     // System.out.println("RRQ Sent : " + concat(data));
                 }
-                else if(tabela.get(ip).getSaltos() != -1 && tabela.get(ip).getSaltos() < 3) {
+                else if(tabela.containsKey(ip) && tabela.get(ip).getSaltos() != -1 && tabela.get(ip).getSaltos() < 3) {
+                    // Se estiver na tabela e for ele proprio ou um vizinho ate nivel 2
                     String next = source.getHostAddress();
                     String resp[] = {"ROUTE_REPLY " + next + " " + tabela.get(ip).getSaltos() + " " + ip.getHostAddress()};
                     DatagramPacket p = newDatagram(resp, group, 0);
                     socket.send(p);
                     // System.out.println("RRP Sent: " + resp[0]);
                 }
-                else if(tabela.get(ip).getSaltos() != -1 && tabela.get(ip).getSaltos() > 2 && !data[3].equals("0")){
+                else if(tabela.containsKey(ip) && tabela.get(ip).getSaltos() != -1 && tabela.get(ip).getSaltos() > 2 && !data[3].equals("0")) {
+                    // Se esta na tabela e nao e vizinho
                     No n = tabela.get(ip);
+                    // Se passarem mais de 10 minutos vai novamente à procura
                     if(System.currentTimeMillis() - n.getTime() > 10*60*1000) {
                         n.setSaltos(-1);
                         n.setIpVizinho(source);
@@ -78,6 +82,7 @@ class RouteThread extends Thread {
                         rt.start();
                     }
                     else {
+                        // Se tempo de adicao < 10min responde mesmo nao sendo vizinho de nivel 2
                         String next = source.getHostAddress();
                         String resp[] = {"ROUTE_REPLY " + next + " " + n.getSaltos() + " " + ip.getHostAddress()};
                         DatagramPacket p = newDatagram(resp, group, 0);

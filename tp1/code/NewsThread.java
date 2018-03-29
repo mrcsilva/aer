@@ -121,7 +121,7 @@ class NewsThread extends Thread {
                     else if (tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
                         Socket s = new Socket("localhost", 9999);
                         PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-                        out.println("NEWS_FOR " + dataTcp);
+                        out.println("NEWS_FOR " + source + " " + dataTcp);
                         s.close();
                     }
                     else if(!tabela.containsKey(dip)) {

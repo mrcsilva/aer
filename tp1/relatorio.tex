@@ -1,0 +1,276 @@
+% This is LLNCS.DEM the demonstration file of
+% the LaTeX macro package from Springer-Verlag
+% for Lecture Notes in Computer Science,
+% version 2.4 for LaTeX2e as of 16. April 2010
+%
+\documentclass{llncs}
+%
+\usepackage{makeidx}  % allows for indexgeneration
+\usepackage[utf8]{inputenc}
+%
+\begin{document}
+%
+\frontmatter          % for the preliminaries
+%
+\pagestyle{headings}  % switches on printing of running heads
+%
+
+%
+\title{Implementação de um Serviço de Notícias numa Rede Adhoc}
+%
+\titlerunning{Implementação de uma Rede Adhoc}  % abbreviated title (for running head)
+%                                     also used for the TOC unless
+%                                     \toctitle is used
+%
+\author{Nuno Areal(A74714), Mário Silva(A75654)}
+%
+\authorrunning{Nuno, Mário} % abbreviated author list (for running head)
+%
+%%%% list of authors for the TOC (use if author list has to be modified)
+\tocauthor{Nuno Areal(A74714), Mário Silva(A75654)}
+%
+\institute{Arquiteturas Emergentes de Redes - MiEI\\
+Universidade do Minho
+}
+
+\maketitle              % typeset the title of the contribution
+
+\begin{abstract}
+Neste relatório explicamos de que forma é que realizamos as diferentes partes do trabalho prático 1.
+Explicaremos quais os protocolos que utilizamos, de que forma os utilizamos, como foram projetados e de que forma são uma boa solução para a rede Adhoc.
+\end{abstract}
+%
+\section{Introdução}
+%
+O primeiro trabalho prático baseia-se na implementação de um protótipo de um serviço de notícias numa rede Adhoc através de um protocolo de encaminhamento e de um protocolo aplicacional. Esta implementação supõe as seguintes funcionalidades:
+
+\begin{itemize}
+    \item Cada nó conhece os seus vizinhos através do envio de receção de mensagens HELLO por UDP no endereço FF02::1 em \emph{multicast} na porta 9999.
+    \item Nas mensagens HELLO será também enviado os seus vizinhos diretos. Desta forma todos os nós conhecerão os seus vizinhos de raio 1 e 2
+    \item Cada nó é capaz de descobrir rotas para outros nós fora da sua vizinhança, de raio maior que 2, através de pedidos ROUTE\_REQUEST que procuraram descobrir o nó por \emph{flooding} e retornar uma mensagem de ROUTE\_REPLY que percorrerá o caminho inverso, preenchendo devidamente as tabelas de cada nó.
+    \item O serviço de notícias será uma aplicação de utilizador que comunicará através de TCP com a aplicação de encaminhamento, tendo como objetivo retornar noticias através de uma mensagem  GET\_NEWS\_FROM e obtê-las no formato NEWS.
+\end{itemize}
+
+
+%
+\section{Protocolos de encaminhamento}
+%
+De seguida iremos explicar como estão desenhadas os diferentes PDUs usados para a implementação e manutenção da rede Adhoc. Decidimos utilizar 5 tipos de PDUs, HELLO, ROUTE\_REQUEST, ROUTE\_REPLY, GET\_NEWS\_FROM e NEWS.
+
+%
+\subsection{Protocolo HELLO}
+%
+Este protocolo é responsável por manter as tabelas de encaminhamento de cada dispositivo com os vizinhos de nivel 1 e 2, ou seja com um número de saltos igual a 1 e 2, respetivamente. Para tal aplica o que vamos explicar de seguida.
+
+\subsubsection{Primitivas de comunicação}
+
+\begin{itemize}
+    \item Send: \begin{itemize}
+        \item Envia os pacote por \emph{multicast} através de um \emph{socket} UDP na porta 9999
+    \end{itemize}
+    \item Receive: \begin{itemize}
+        \item Recebe os pacotes na porta 9999 UDP que fazem parte do grupo de \emph{multicast};
+        \item Processa o pacote que recebeu, adicionando à sua tabela de encaminhamento os IPs recebidos, tendo como próximo salto o vizinho que os enviou.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Formato das mensagens protocolares}
+
+As mensagens HELLO estão no formato "HELLO \textless endereço do vizinho 1\textgreater \textless endereço do vizinho 2\textgreater \textless...\textgreater" (endereço de vizinhos na sua vizinhança de raio igual a 1 separados por espaços).
+
+\subsubsection{Interações}
+
+Para o envio é criada uma \emph{thread} que de x em x tempo envia uma mensagem no formato descrito anteriormente através de \emph{multicast}.
+No evento da receção de uma mensagem deste tipo é adicionado o endereço do vizinho que lhe enviou e todos os endereços vizinhos que se encontram na mensagem. Todas as mensagens seguintes passam por um teste do estado que compara os vizinhos mencionados na mensagem anterior com a atual, efetuando as modificações devidas na tabela de encaminhamento. Para cada vizinho direto é  criada uma \emph{thread} que vai efetuar parte do  a processar todas mensagens HELLO desse vizinho, tendo esta um sistema de \emph{timeout} que caso não receba nenhuma mensagem num determinado período elimina este vizinho da tabela assim como todos os vizinhos indiciados por este.
+
+
+\subsection{Protocolo ROUTE\_REQUEST}
+
+Este protocolo tem a função de permitir a um dispositivo descobrir qual o próximo salto para um endereço na rede que não seja seu vizinho até nível 2. Desse modo desenvolvemos o seguinte para que isso fosse possível.
+
+\subsubsection{Primitivas de comunicação}
+
+\begin{itemize}
+    \item Send: \begin{itemize}
+        \item Envia as mensagens através de \emph{multicast} para os seus vizinhos de nível 1
+        \item Guarda informação de que existe um ROUTE\_REQUEST para o IP destino
+    \end{itemize}
+    \item Receive: \begin{itemize}
+        \item Ao receber um ROUTE\_REQUEST verifica se tem de o reencaminhar ou se pode responder
+    \end{itemize}
+\end{itemize}
+
+
+\subsubsection{Formato das mensagens protocolares}
+
+As mensagens de ROUTE\_REQUEST têm o seguinte formato, "ROUTE\_REQUEST \textless IP origem do pedido\textgreater \textless IP a descobrir\textgreater \textless Nº Saltos\textgreater \textless Tempo limite\textgreater"
+
+\subsubsection{Interações}
+
+Para fazer o \emph{handle} dos pedidos de ROUTE\_REQUEST é criada uma \emph{thread} assim que é recebido um pacote desse tipo. Essa \emph{thread} vai depois verificar se o IP para o qual e necessário descobrir a rota já está na sua tabela de encaminhamento.\\
+Se não estiver e ainda houver saltos a fazer, esta irá adicioná-lo e marcá-lo como sendo um ROUTE\_REQUEST e depois enviá-lo para os seus vizinhos. Se estiver na tabela, não estiver marcado como ROUTE\_REQUEST e for vizinho de nível menor que 2 esta responde imediatamente. Por último, se estiver na tabela, não estiver marcado como ROUTE\_REQUEST, vizinho de nível maior que 2 e ainda houver saltos a fazer verifica se a entrada na tabela ainda está dentro do tempo de validade. Caso esteja responde com um ROUTE\_REPLY, caso contrário vai à procura de um caminho através de um ROUTE\_REQUEST, e se encontrar responde a quem lhe fez o pedido.
+
+\subsection{Protocolo ROUTE\_REPLY}
+
+\subsubsection{Primitivas de comunicação}
+
+As primitivas de comunicação são as mesmas que as do ROUTE\_REQUEST, uma vez que é a mesma \emph{thread} que trata dos dois tipos de PDUs.
+
+\subsubsection{Formato das mensagens protocolares}
+
+As mensagens de ROUTE\_REPLY são do seguinte formato, "ROUTE\_REPLY \textless Próximo IP\textgreater \textless Nº Saltos\textgreater \textless IP a descobrir\textgreater"
+
+\subsubsection{Interações}
+
+Ao receber um ROUTE\_REPLY a \emph{thread} responsável irá incrementar o numero de saltos, atualizar a informação da sua tabela e enviar o novo ROUTE\_REPLY para os seus vizinhos.\\
+A utilização de um Próximo IP na mensagem permite que ao enviar as mensagens em \emph{multicast} apenas o vizinho cujo IP é o indicado continue a fazer o envio por \emph{multicast}. Deste modo iremos eliminar uma quantidade elevada de mensagens em circulação na rede.
+
+\clearpage
+
+\subsection{Protocolos GET\_NEWS\_FROM e NEWS\_FROM}
+
+Este dois protocolos são responsáveis por fazer o encaminhamento de noticias na rede Adhoc, procedendo da seguinte forma.
+
+\subsubsection{Primitivas de comunicação}
+
+\begin{itemize}
+    \item Send: \begin{itemize}
+        \item Ambas são enviadas por \emph{multicast} na porta 9999
+    \end{itemize}
+    \item Receive: \begin{itemize}
+        \item No caso do GET\_NEWS\_FROM verifica se envia por \emph{multicast} ou se responde com NEWS\_FOR.
+        \item Para o NEWS\_FOR verifica se envia por \emph{multicast} ou se responde para o socket TCP.
+    \end{itemize}
+\end{itemize}
+
+
+\subsubsection{Formato das mensagens protocolares}
+
+As mensagens de GET\_NEWS\_FROM são formadas da seguinte forma, "GET\_NEWS\_FROM \textless IP origem\textgreater \textless IP destino\textgreater \textless Próximo IP \textgreater".\\
+\\
+As mensagens NEWS\_FOR têm o seguinte formato, "NEWS\_FOR \textless IP origem \textgreater \textless IP destino \textgreater \textless Próximo IP \textgreater \textless Notícias \textgreater".
+
+\subsubsection{Interações}
+
+No momento da receção de mensagens do tipo GET\_NEWS\_FROM irá ser verificado se o Próximo IP é o do nó que recebeu a mensagem, evitando propagação desnecessária de pacotes e se o IP destino já consta da tabela de encaminhamento. Se este último não acontecer é desencadeado um ROUTE\_REQUEST de forma a descobrir o nó destino. Se este for descoberto o envio da mensagem continua por \emph{multicast}, caso contrário é parado o envio.É ainda verificado se o Próximo IP é igual ao IP destino, e caso isso aconteça é enviado por TCP o pedido de GET\_NEWS\_FROM posteriormente processado pela \emph{thread} responsável.\\
+No caso do NEWS\_FOR é também verificado o Próximo IP pelas mesmas razões. Como neste o IP destino é já o originador do GET\_NEWS\_FROM apenas temos de colocar no Próximo IP o endereço do nó vizinho que nos leva lá e enviar a mensagem.\\
+Se o Próximo IP for igual ao IP destino é enviado para o cliente, através de TCP, uma mensagem com "NEWS\_FOR \textless IP origem \textgreater \textless Noticias \textgreater".
+
+\section{Protocolo de aplicação}
+
+Este protocolo é o responsável por fazer uso do que o protocolo de encaminhamento produz, emulando o que seria uma aplicação a correr por cima de um \emph{router}. Através de um modelo cliente/servidor, um nó da rede pode pedir a outro as noticias que este tenha.
+
+\subsection{Primitivas de comunicação}
+
+\begin{itemize}
+    \item Send: \begin{itemize}
+        \item Envia as mensagens para o socket TCP do localhost
+    \end{itemize}
+    \item Receive: \begin{itemize}
+        \item Recebe as mensagens do socket TCP do localhost
+    \end{itemize}
+\end{itemize}
+
+\subsection{Formato das mensagens protocolares}
+
+Temos dois tipos de mensagens:
+\begin{itemize}
+    \item GET\_NEWS\_FROM \begin{itemize}
+        \item "GET\_NEWS\_FROM \textless IP origem \textgreater \textless IP destino \textgreater"
+    \end{itemize}
+    \item NEWS\_FOR \begin{itemize}
+        \item "NEWS\_FOR \textless IP origem \textgreater \textless Notícia/Dados \textgreater".
+    \end{itemize}
+\end{itemize}
+
+
+\subsection{Interações}
+
+Tudo aqui é muito simples. O cliente procede ao envio por TCP da mensagem com \emph{GET\_NEWS\_FROM IP\_origem IP\_destino}. Posteriormente a \emph{thread} já no protocolo de encaminhamento verifica se já existe uma entrada para o IP destino na tabela de encaminhamento. Se esta for encontrada, é feito o envio por UDP do pedido de notícias, caso contrário é feito um ROUTE\_REQUEST para encontrar o caminho, que se não for encontrado avisa o cliente com uma mensagem no ecrã.\\
+O cliente fica depois a aguardar a receção da mensagem por um certo período de tempo até se dar um timeout.
+\\
+No caso da receção de um NEWS\_FOR pelo cliente significa que as notícias que ele pediu efetivamente chegaram. É então imprimido no ecrã de onde vieram as noticias e o seu conteúdo.
+
+\section{Implementação}
+
+A próxima parte destina-se a explicar alguns detalhes que não foram referidos até ao momento relacionados com a forma como implementamos a nossa aplicação.
+
+\subsection{Detalhes}
+
+A implementação foi feita em Java versão 7, usando bibliotecas bem conhecidas.
+Existe uma grande subdivisão do processamento através de \emph{threads} bem definidas em classes específicas.
+\\
+
+A classe \textbf{No} contém a especificação da nossa tabela de encaminhamento e contém os parâmetros endereço, endereço do vizinho, saltos até chegar ao endereço, uma blocking queue utilizada na implementação do \emph{dead interval} do protocolo HELLO, e o timestamp para controlo da cache de rotas para vizinhos de nível superior a 2.
+\\
+
+A classe \textbf{Adhoc} é a que contém o \emph{main} do nosso programa que implementa o protocolo de encaminhamento, efetua o \emph{start} às varias \emph{threads} necessárias para o funcionamento, nomeadamente a que efetua o envio de hellos, HelloSendThread, a que efetua o processamento de pacotes recebidos por \emph{multicast}, MulticastReceiveThread e a que processa as conexões TCP, TCPThread. Esta também efetua o \emph{print} de uma interface de opções que permite ao utilizador imprimir a tabela de encaminhamento através da \emph{thread} PrintThread.
+\\
+
+A classe \textbf{HelloSendThread} é uma das \emph{threads} iniciadas pela Adhoc e esta envia as mensagens de HELLO para os vizinhos diretos, incluindo nela os seus de vizinhos diretos. Isto permite que todos os vizinhos diretos conheçam a sua vizinhança num raio de dois saltos.
+\\
+
+A classe \textbf{MulticastReceiveThread} recebe todos os pacotes que são enviados por \emph{multicast}, efetuando diferentes processos dependendo do tipo da mensagem e do estado atual da tabela de encaminhamento. Os procedimentos mais relevantes são a criação de uma \emph{thread}, HelloReceiveThread, por cada vizinho direto e redirecionamento de todos os pacotes HELLO seguintes para esta thread. Efetua o mesmo processo para os outros pacotes, criando uma RouteThread para pacotes de ROUTE\_REQUEST e ROUTE\_REPLY e uma NewsThread para GET\_NEWS\_FROM e NEWS\_FROM.
+\\
+
+A classe \textbf{HelloReceiveThread} tem como função a implementação do parâmetro \emph{dead interval}, que declara o vizinho inatingível caso este não envie nenhuma mensagem de HELLO num determinado período de tempo, eliminando-o da tabela de encaminhamento assim com todos os nós que cuja rota tem como próximo salto esse mesmo vizinho.
+\\
+
+A classe \textbf{RouteThread} é uma classe que auxilia a MulticastReceiveThread nos pacotes que dizem respeito à descoberta de rotas. Aquando da receção de um desses pacotes, analisa-o e processa-o de acordo com o descrito anteriormente, enviando-o novamente ou descartando o pacote.
+De referir que aquando do envio de um ROUTE\_REQUEST é criada uma \emph{thread}, RequestTimeoutThread, que passado o tempo limite verifica se já chegou a resposta, ROUTE\_REPLY. Não chegando remove a entrada criada aquando do envio do \emph{request}.
+
+A classe \textbf{NewsThread} também auxilia a MulticastReceiveThread tratando de todos os pacotes relacionados com notícias. O processo do processamento também foi descrito anteriormente e o resultado final é semelhante ao da RouteThread, adicionando apenas a interação TCP.
+
+A classe \textbf{TCPThread} é a responsável pelo processamento de pacotes que chegam através de TCP. Esta verifica se se trata de um GET\_NEWS\_FROM ou de um NEWS\_FOR.\\
+No primeiro caso, é verificado se o IP origem consta da tabela de encaminhamento. Não estando é efetuado ROUTE\_REQUEST para a descoberta do vizinho. De seguida é criado o NEWS\_FOR que irá levar as notícias até ao requerente, que será depois enviado por \emph{multicast}.\\
+Na receção de um NEWS\_FOR, é recolhido de uma tabela temporária o socket criado com o cliente e são enviadas as notícias.\\
+
+A classe \textbf{PrintThread} efetua o \emph{print} para o ecrã do estado da tabela atual com os parâmetros endereço do nó, endereço do nó vizinho, numero de saltos.
+\\
+
+A classe \textbf{Cliente} representa o protocolo aplicacional que é independente do programa que implementa o protocolo de encaminhamento. Esta é composta por uma interface que permite efetuar um pedido de GET\_NEWS\_FROM a um outro nó através do seu endereço IP, criando uma conexão TCP com o programa que esta a efetuar o protocolo de encaminhamento no \emph{host}, enviando este pedido e ficando à espera de uma resposta. Se esta não chegar dentro do tempo limite é escrita no ecrã uma mensagem de erro, avisando que o pedido expirou.
+
+\subsection{Parâmetros}
+
+\begin{itemize}
+    \item MulticastSocket: 9999 (UDP)
+    \item InetAdress: FF02::1
+    \item ServerSocket: 9999 (TCP)
+    \item Hello Interval: 3 segundos
+    \item Dead Interval: 6 segundos
+    \item Timeout REQUEST: 300 milisegundos, aumentando para os GET\_NEWS em 100 ms até um limite de 5 segundos
+    \item Timeout TCP: 5 segundos
+\end{itemize}
+
+\subsection{Biliotecas de funções}
+
+\begin{itemize}
+    \item MulticastSocket
+    \item InetAddress
+    \item DatagramPacket
+    \item BlockingQueue
+    \item ArrayBlockingQueue
+    \item NetworkInterface
+    \item BufferedReader
+    \item Socket
+    \item InputStreamReader
+    \item DataOutputStream
+    \item PrintWriter
+    \item ServerSocket
+\end{itemize}
+
+\section{Testes e Resultados}
+
+Em anexo estão vários \emph{prints} de tabelas de encaminhamento para a topologia v6 fornecida na plataforma de e-Learning.
+
+\section{Conclusões e trabalho futuro}
+
+Com este trabalho podemos perceber melhor o funcionamento de redes Adhoc e como estas fazem o reencaminhamento de tráfego pela rede e também as diversas formas de otimizar os recursos da rede.\\
+Penso que atingimos os objetivos pretendidos para o trabalho de fazer a implementação de um protocolo de encaminhamento que atenuasse os efeitos de \emph{flooding} típicos de uma rede Adhoc através de várias medidas.\\
+Uma das coisas a mudar seria a separação do servidor da parte do encaminhamento, uma vez que o temos de ter lá para conseguirmos que a nossa aplicação esteja à escuta na porta 9999 em TCP, embora isso não seja muito problemático uma vez que o foco do trabalho prático é o protocolo de encaminhamento. Isso poderia ser conseguido se a tabela de encaminhamento fosse acessível pela parte aplicacional.\\
+
+Tendo como base o que aprendemos com a realização deste trabalho poderíamos no futuro desenvolver um protocolo de encaminhamento para redes Adhoc mais eficiente, evitando ainda mais os pacotes desnecessários a circular na rede.
+
+
+\clearpage
+\end{document}

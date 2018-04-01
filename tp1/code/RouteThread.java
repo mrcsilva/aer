@@ -80,6 +80,14 @@ class RouteThread extends Thread {
                         DatagramPacket p = newDatagram(data, group, 1);
                         socket.send(p);
                         rt.start();
+                        Thread.sleep(Integer.parseInt(data[4]));
+                        if(tabela.containsKey(n.getIp())) {
+                            n = tabela.get(n.getip());
+                            String next = source.getHostAddress();
+                            String resp[] = {"ROUTE_REPLY " + next + " " + n.getSaltos() + " " + ip.getHostAddress()};
+                            DatagramPacket p = newDatagram(resp, group, 0);
+                            socket.send(p);
+                        }
                     }
                     else {
                         // Se tempo de adicao < 10min responde mesmo nao sendo vizinho de nivel 2

@@ -82,10 +82,10 @@ class RouteThread extends Thread {
                         rt.start();
                         Thread.sleep(Integer.parseInt(data[4]));
                         if(tabela.containsKey(n.getIp())) {
-                            n = tabela.get(n.getip());
+                            n = tabela.get(n.getIp());
                             String next = source.getHostAddress();
                             String resp[] = {"ROUTE_REPLY " + next + " " + n.getSaltos() + " " + ip.getHostAddress()};
-                            DatagramPacket p = newDatagram(resp, group, 0);
+                            p = newDatagram(resp, group, 0);
                             socket.send(p);
                         }
                     }

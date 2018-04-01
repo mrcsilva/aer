@@ -261,7 +261,7 @@ class TCPThread extends Thread {
             else if(re.split(" ")[0].equals("NEWS_FOR")) {
                 String temp = "";
                 for(int i = 2; i < re.split(" ").length; i++) {
-                    temp += re.split(" ")[i];
+                    temp += re.split(" ")[i] + " ";
                 }
                 Socket se = soMap.get(re.split(" ")[1]);
                 System.out.println(re);

@@ -234,7 +234,7 @@ A classe \textbf{Cliente} representa o protocolo aplicacional que é independent
 
 \begin{itemize}
     \item MulticastSocket: 9999 (UDP)
-    \item InetAdress: FF02::1
+    \item InetAddress: FF02::1
     \item ServerSocket: 9999 (TCP)
     \item Hello Interval: 3 segundos
     \item Dead Interval: 6 segundos
@@ -266,7 +266,9 @@ Em anexo estão vários \emph{prints} de tabelas de encaminhamento para a topolo
 Para executar os testes utilizamos varios nós, mas os \emph{prints} utilizam o A0, A3, A10 e A11.\\
 Podemos encontrar as tabelas de encaminhamento dos 4 nós e também a tabela do nó A11 depois de A0 efetuar um pedido de notícias.\\
 Em cada nó podemos definir a noticia que este tem para dar, encontrando-se também em anexo um imagem que exemplifica isso.\\
-Por fim falta apenas a receção da noticia por parte do A0 e a sua impressão que se encontram também demonstrados numa imagem.\\
+Por fim falta apenas a receção da noticia por parte do A0 e a sua impressão que se encontram também demonstrados numa imagem.
+
+Para além destes verificamos se a movimentação de nós fazia com que houvesse uma alteração nas tabelas, ou seja, se um nó de nível maior do que 2 passava a vizinho direto e de nível 2 e se um GET\_NEWS\_FROM a um vizinho direto não despoletava um ROUTE\_REQUEST.
 
 \section{Conclusões e trabalho futuro}
 

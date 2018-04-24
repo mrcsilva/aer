@@ -12,15 +12,17 @@ class HelloReceiveThread extends Thread {
 
     private InetAddress ip;
     private Map<InetAddress, No> tabela;
+    private int numHellos;
     private BlockingQueue<DatagramPacket> queueH = null;
 
-    public HelloReceiveThread(InetAddress ip, Map<InetAddress, No> tabela, BlockingQueue<DatagramPacket> queueH) {
+    public HelloReceiveThread(InetAddress ip, Map<InetAddress, No> tabela, int numHellos, BlockingQueue<DatagramPacket> queueH) {
 
         this.ip = ip;
         this.tabela = tabela;
+        this.numHellos = numHellos;
         this.queueH = queueH;
     }
-
+/*
     void removeVizinhos(InetAddress ip){
 
         List<InetAddress> list=new ArrayList<InetAddress>();
@@ -39,6 +41,7 @@ class HelloReceiveThread extends Thread {
             }
         }
     }
+    */
 
     @Override
     public void run() {
@@ -47,9 +50,10 @@ class HelloReceiveThread extends Thread {
 
             List<DatagramPacket> listR = new ArrayList<DatagramPacket>();
 
+
             while (true) {
                 try {
-                    Thread.sleep(6000); // dead interval
+                    Thread.sleep(3000); // dead interval
                 } catch (InterruptedException e) {
                     System.out.println(e);
                 }
@@ -59,10 +63,14 @@ class HelloReceiveThread extends Thread {
                 queueH.drainTo(listR);
 
                 if (!listR.isEmpty()) {
-                    //Remover todos os elementos da lisa
+                    //Remover todos os elementos da lista
+                    this.numHellos+= listR.size();
+                    this.tabela.get(this.ip).setNumHellos(this.numHellos);
                     listR.removeAll(listR);
+
                 } else {
-                    removeVizinhos(this.ip);
+                    //removeVizinhos(this.ip);
+                    this.tabela.remove(this.ip);
                     Thread.currentThread().interrupt();
                     break;
                 }

@@ -28,7 +28,7 @@ class TCPThread extends Thread {
     public void setNoticia(String noticia) {
         this.noticia = noticia;
     }
-
+    /*
     // Envia ROUTE_REQUEST
     // @ip Endereço a descobrir
     // @t Tempo até ao timeout
@@ -63,7 +63,7 @@ class TCPThread extends Thread {
             e.printStackTrace();
         }
     }
-
+    */
     @Override
     public void run() {
         Socket socket = null;

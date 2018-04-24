@@ -1,4 +1,5 @@
 import java.net.MulticastSocket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Map;
 import java.io.IOException;
@@ -15,15 +16,17 @@ class MulticastReceiveThread extends Thread {
 
     private MulticastSocket socket;
     private Map<InetAddress,No> tabela;
+    private Map<InetAddress,List<Message>> messages;
     private byte[] buf;
 
-    public MulticastReceiveThread(MulticastSocket socket,Map<InetAddress,No> tabela) {
+    public MulticastReceiveThread(MulticastSocket socket,Map<InetAddress,No> tabela,Map<InetAddress,List<Message>> messages) {
       this.socket = socket;
       this.tabela = tabela;
+      this.messages = messages;
       this.buf = new byte[256];
   }
 
-
+/*
     public void addNos(InetAddress ipVizinho, String hello) throws IOException {
 
         //int k=0;
@@ -81,7 +84,7 @@ class MulticastReceiveThread extends Thread {
             catch(Exception e){}
         }
     }
-
+*/
 
 
     @Override
@@ -92,6 +95,8 @@ class MulticastReceiveThread extends Thread {
             socket.joinGroup(group);
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             No no;
+            DatagramSocket socket2 = new DatagramSocket();
+            DatagramPacket sendPacket;
 
             while(true){
                 socket.receive(packet);
@@ -99,39 +104,50 @@ class MulticastReceiveThread extends Thread {
                 String data = new String(packet.getData(), packet.getOffset(), packet.getLength());
 
                 String dataH = "HELLO";
-                String dataRQ = "ROUTE_REQUEST";
-                String dataRP  = "ROUTE_REPLY";
+                //String dataRQ = "ROUTE_REQUEST";
+                //String dataRP  = "ROUTE_REPLY";
                 String[] splited = data.split("\\s+");
 
                 if(splited[0].equals(dataH)){
-                    if(tabela.containsKey(ip) && tabela.get(ip).getSaltos() >= 2){
-                        tabela.remove(ip);
-                     }
 
 
                     if(!tabela.containsKey(ip)){
 
                         BlockingQueue<DatagramPacket> queueH = new ArrayBlockingQueue<DatagramPacket>(1000);
 
-                        no = new No(ip, ip, 1, queueH, 0);
+                        no = new No(ip, 0, 1, queueH, 0);
                         tabela.put(ip,no);
 
-                        addNos(ip,data);
-                        HelloReceiveThread h = new HelloReceiveThread(ip,tabela,queueH);
+                        //addNos(ip,data);
+                        HelloReceiveThread h = new HelloReceiveThread(ip,tabela,0,queueH);
                         h.start();
+
+                        if(messages.containsKey(ip)){
+
+                            for ( Message ma : messages.get(ip)){
+
+                                buf = ma.getMess().getBytes();
+                                sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
+                                socket2.send(sendPacket);
+
+                            }
+
+                            messages.remove(ip);
+
+                        }
 
                         // System.out.println("Nó Adicionado: " + ip.getHostAddress());
                     }
 
                     if(tabela.containsKey(ip)){
                         if(!(tabela.get(ip).getSaltos() == 0)){
-                           addNos(ip,data);
-                           removeNos(ip,data);
+                           //addNos(ip,data);
+                           //removeNos(ip,data);
                            no = tabela.get(ip);
                            no.getQueue().offer(packet);
                         }
                     }
-                }
+                }/*
                 else if(splited[0].equals(dataRQ)) {
                     No n = new No(null, null ,-1, null, 0);
                     RouteThread rt = new RouteThread(splited, tabela, ip, n);
@@ -142,13 +158,15 @@ class MulticastReceiveThread extends Thread {
                     rt.start();
                 }
                 else if(splited[0].equals("GET_NEWS_FROM")) {
+
+                    if
                     NewsThread nt = new NewsThread(splited, tabela, 0);
                     nt.start();
                 }
                 else if(splited[0].equals("NEWS_FOR")) {
                     NewsThread nt2 = new NewsThread(splited, tabela, 1);
                     nt2.start();
-                }
+                }*/
             }
         } catch (Exception io) {
             System.out.println("EERRO " + io.getMessage());

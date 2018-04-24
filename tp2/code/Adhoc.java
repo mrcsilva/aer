@@ -1,5 +1,6 @@
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.DatagramSocket;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
 import java.util.ArrayList;
@@ -18,12 +19,15 @@ import java.util.Scanner;
 class Adhoc {
 
     private static Map<InetAddress,No> tabela;
+    private static Map<InetAddress,List<Message>> messages;
 
 
     public static void main(String args[]) throws Exception {
 
         MulticastSocket socket = new MulticastSocket(9999);
+        DatagramSocket socket2 = new DatagramSocket(6666);
         tabela = new HashMap<InetAddress, No>();
+        messages = new HashMap<InetAddress,List<Message>>();
 
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -38,7 +42,7 @@ class Adhoc {
                     InetAddress addr = addresses.nextElement();
                     if(addr.isLinkLocalAddress()){
                         InetAddress temp = InetAddress.getByName(addr.getHostAddress().split("\\%")[0]);
-                        No no = new No(temp, temp, 0, null, 0);
+                        No no = new No(temp, 0, 0, null,0);
                         tabela.put(addr,no);
                     }
                 }
@@ -52,11 +56,15 @@ class Adhoc {
         HelloSendThread hs = new HelloSendThread(socket,tabela);
         hs.start();
 
-        MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela);
+        MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela,messages);
         mr.start();
 
-        TCPThread tt = new TCPThread(tabela);
-        tt.start();
+        UnicastReceiveThread ur = new UnicastReceiveThread(socket2,tabela,messages);
+        ur.start();
+
+        //TCPThread tt = new TCPThread(tabela);
+        //tt.start();
+/*
         int op = -1;
         Scanner s = new Scanner(System.in);
         do {
@@ -88,6 +96,6 @@ class Adhoc {
                         break;
             }
         } while (op != 0);
-        System.exit(0);
+        System.exit(0);*/
     }
 }

@@ -30,7 +30,7 @@ class HelloSendThread extends Thread {
         socket.send(packet);
         socket.leaveGroup(group);
     }
-
+/*
     public String addVizinhos(String hello){
         for (No no : tabela.values()){
             if(no.getSaltos() == 1){
@@ -39,17 +39,17 @@ class HelloSendThread extends Thread {
         }
         return hello;
     }
-
+*/
 
     @Override
     public void run() {
         try {
             while(true){
                 String hello = "HELLO";
-                hello = addVizinhos(hello);
+                //hello = addVizinhos(hello);
                 multicastSend(hello);
                 try {
-                     Thread.sleep(3000);    //hello interval = 3 segundos
+                     Thread.sleep(2000);    //hello interval = 2 segundos
                 }
                 catch (Exception e) {
                     System.out.println(e);

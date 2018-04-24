@@ -20,72 +20,11 @@ class MulticastReceiveThread extends Thread {
     private byte[] buf;
 
     public MulticastReceiveThread(MulticastSocket socket,Map<InetAddress,No> tabela,Map<InetAddress,List<Message>> messages) {
-      this.socket = socket;
-      this.tabela = tabela;
-      this.messages = messages;
-      this.buf = new byte[256];
-  }
-
-/*
-    public void addNos(InetAddress ipVizinho, String hello) throws IOException {
-
-        //int k=0;
-        String[] splited = hello.split("\\s+");
-        for(int i=1; i <splited.length;i++){
-            // byte bytes[] = InetAddress.getByName(splited[i]).getAddress();
-            // for(No no : this.tabela.values()){
-            //
-            //     Inet6Address adr = (Inet6Address) no.getIp();
-            //     k = adr.getScopeId();
-            //     break;
-            // }
-
-            // InetAddress ipSalto = Inet6Address.getByAddress("",bytes,k);
-
-            InetAddress ipSalto = InetAddress.getByName(splited[i]);
-
-            if(!tabela.containsKey(ipSalto)){
-                No no = new No(ipSalto, ipVizinho, 2, null, 0);
-                tabela.put(ipSalto,no);
-                // System.out.println("Nó Adicionado: " + ipSalto);
-            }
-            else if (tabela.get(ipSalto).getSaltos() > 2){
-                tabela.get(ipSalto).setIpVizinho(ipVizinho);
-            }
-        }
+        this.socket = socket;
+        this.tabela = tabela;
+        this.messages = messages;
+        this.buf = new byte[256];
     }
-
-    public void removeNos(InetAddress ipVizinho ,String hello){
-
-        String[] splited = hello.split("\\s+");
-
-        List<String> listNos= new ArrayList<String>();
-        List<String> listHel= new ArrayList<String>();
-
-        for (No no : this.tabela.values()){
-            if(no.getIpVizinho().equals(ipVizinho) && !no.getIp().equals(ipVizinho) && no.getSaltos() < 3 && no.getSaltos() != -1){
-                String[] splited2 = no.getIp().getHostAddress().split("\\%");
-                listNos.add(splited2[0]);
-            }
-        }
-
-        for(int i=1; i < splited.length;i++){
-            String[] splited3 = splited[i].split("\\%");
-            listHel.add(splited3[0]);
-        }
-
-        listNos.removeAll(listHel);
-
-        for(String s : listNos){
-            try{
-                // System.out.println("No removido: "+s);
-                this.tabela.remove(InetAddress.getByName(s));
-            }
-            catch(Exception e){}
-        }
-    }
-*/
-
 
     @Override
     public void run() {
@@ -104,13 +43,9 @@ class MulticastReceiveThread extends Thread {
                 String data = new String(packet.getData(), packet.getOffset(), packet.getLength());
 
                 String dataH = "HELLO";
-                //String dataRQ = "ROUTE_REQUEST";
-                //String dataRP  = "ROUTE_REPLY";
                 String[] splited = data.split("\\s+");
 
                 if(splited[0].equals(dataH)){
-
-
                     if(!tabela.containsKey(ip)){
 
                         BlockingQueue<DatagramPacket> queueH = new ArrayBlockingQueue<DatagramPacket>(1000);
@@ -118,57 +53,49 @@ class MulticastReceiveThread extends Thread {
                         no = new No(ip, 0, 1, queueH, 0);
                         tabela.put(ip,no);
 
-                        //addNos(ip,data);
-                        HelloReceiveThread h = new HelloReceiveThread(ip,tabela,0,queueH);
+                        HelloReceiveThread h = new HelloReceiveThread(ip,tabela,1,queueH);
                         h.start();
+                        List<Message> toDelete = new ArrayList<>();
+                        try {
+                            if(messages.containsKey(ip)){
+                                toDelete.clear();
+                                for ( Message ma : messages.get(ip)){
+                                    buf = ma.getMess().getBytes();
+                                    sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
+                                    socket2.send(sendPacket);
+                                    toDelete.add(ma);
+                                }
+                                // Remove todas as mensagens enviadas
+                                messages.get(ip).removeAll(toDelete);
 
-                        if(messages.containsKey(ip)){
-
-                            for ( Message ma : messages.get(ip)){
-
-                                buf = ma.getMess().getBytes();
-                                sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
-                                socket2.send(sendPacket);
-
+                                // Apenas elimina o IP da tabela de já nao houver mais mensagens para enviar
+                                if(messages.get(ip).size() == 0) {
+                                    messages.remove(ip);
+                                }
                             }
-
-                            messages.remove(ip);
-
+                        }
+                        catch(IOException io) {
+                            // Se ocorrer um erro remove todas as mensagens até agora enviadas da lista
+                            // Se todas foram enviadas remove o IP da tabela
+                            messages.get(ip).removeAll(toDelete);
+                            if(messages.get(ip).size() == 0) {
+                                messages.remove(ip);
+                            }
+                            io.printStackTrace();
                         }
 
                         // System.out.println("Nó Adicionado: " + ip.getHostAddress());
                     }
-
-                    if(tabela.containsKey(ip)){
-                        if(!(tabela.get(ip).getSaltos() == 0)){
-                           //addNos(ip,data);
-                           //removeNos(ip,data);
+                    else {
+                        if(!(tabela.get(ip).getSaltos() == 0)) {
                            no = tabela.get(ip);
                            no.getQueue().offer(packet);
                         }
                     }
-                }/*
-                else if(splited[0].equals(dataRQ)) {
-                    No n = new No(null, null ,-1, null, 0);
-                    RouteThread rt = new RouteThread(splited, tabela, ip, n);
-                    rt.start();
                 }
-                else if(splited[0].equals(dataRP)) {
-                    RouteThread rt = new RouteThread(splited, tabela, ip, null);
-                    rt.start();
-                }
-                else if(splited[0].equals("GET_NEWS_FROM")) {
-
-                    if
-                    NewsThread nt = new NewsThread(splited, tabela, 0);
-                    nt.start();
-                }
-                else if(splited[0].equals("NEWS_FOR")) {
-                    NewsThread nt2 = new NewsThread(splited, tabela, 1);
-                    nt2.start();
-                }*/
             }
         } catch (Exception io) {
+            socket2.close();
             System.out.println("EERRO " + io.getMessage());
             io.printStackTrace();
         }

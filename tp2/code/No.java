@@ -10,9 +10,6 @@ class No {
     private long timestamp;
     private BlockingQueue<DatagramPacket> queueH = null;
 
-    public No() {
-    }
-
     public No(InetAddress ip, int saltos , int numHellos, BlockingQueue<DatagramPacket> queueH, int timestamp) {
         this.ip = ip;
         this.numHellos = numHellos;

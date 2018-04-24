@@ -18,7 +18,9 @@ import java.util.Scanner;
 
 class Adhoc {
 
+    // Tabela com os nos atualmente adjacentes
     private static Map<InetAddress,No> tabela;
+    // Lista de mensagens a enviar
     private static Map<InetAddress,List<Message>> messages;
 
 
@@ -50,10 +52,11 @@ class Adhoc {
         }
         catch (SocketException e) {
             socket.close();
+            socket2.close();
             throw new RuntimeException(e);
         }
 
-        HelloSendThread hs = new HelloSendThread(socket,tabela);
+        HelloSendThread hs = new HelloSendThread(socket);
         hs.start();
 
         MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela,messages);
@@ -62,8 +65,8 @@ class Adhoc {
         UnicastReceiveThread ur = new UnicastReceiveThread(socket2,tabela,messages);
         ur.start();
 
-        //TCPThread tt = new TCPThread(tabela);
-        //tt.start();
+        TCPThread tt = new TCPThread(tabela);
+        tt.start();
 /*
         int op = -1;
         Scanner s = new Scanner(System.in);

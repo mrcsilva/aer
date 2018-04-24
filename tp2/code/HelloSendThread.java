@@ -11,15 +11,12 @@ class HelloSendThread extends Thread {
 
 
     private MulticastSocket socket;
-    private Map<InetAddress,No> tabela;
     private byte[] buf;
 
-    public HelloSendThread(MulticastSocket socket,Map<InetAddress,No> tabela) {
+    public HelloSendThread(MulticastSocket socket) {
         this.socket = socket;
-        this.tabela = tabela;
         this.buf = new byte[256];
     }
-
 
     public void multicastSend(String hello) throws IOException {
         InetAddress group = InetAddress.getByName("FF02::1");
@@ -30,34 +27,18 @@ class HelloSendThread extends Thread {
         socket.send(packet);
         socket.leaveGroup(group);
     }
-/*
-    public String addVizinhos(String hello){
-        for (No no : tabela.values()){
-            if(no.getSaltos() == 1){
-                hello = hello + " " + no.getIp().getHostAddress().split("\\%")[0]; //;no.getIp().getScopeId();
-            }
-        }
-        return hello;
-    }
-*/
 
     @Override
     public void run() {
         try {
             while(true){
                 String hello = "HELLO";
-                //hello = addVizinhos(hello);
                 multicastSend(hello);
-                try {
-                     Thread.sleep(2000);    //hello interval = 2 segundos
-                }
-                catch (Exception e) {
-                    System.out.println(e);
-                }
+                Thread.sleep(2000);    // hello interval = 2 segundos
             }
         }
         catch (Exception io) {
-
+            io.printStackTrace();
         }
     }
 }

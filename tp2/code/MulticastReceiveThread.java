@@ -17,12 +17,16 @@ class MulticastReceiveThread extends Thread {
     private MulticastSocket socket;
     private Map<InetAddress,No> tabela;
     private Map<InetAddress,List<Message>> messages;
+    private Map<Message, Integer> toSend;
+    private Map<Message, List<InetAddress>> sent;
     private byte[] buf;
 
-    public MulticastReceiveThread(MulticastSocket socket,Map<InetAddress,No> tabela,Map<InetAddress,List<Message>> messages) {
+    public MulticastReceiveThread(MulticastSocket socket, Map<InetAddress,No> tabela, Map<InetAddress,List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
         this.socket = socket;
         this.tabela = tabela;
         this.messages = messages;
+        this.toSend = toSend;
+        this.sent = sent;
         this.buf = new byte[256];
     }
 
@@ -57,20 +61,37 @@ class MulticastReceiveThread extends Thread {
                         h.start();
                         List<Message> toDelete = new ArrayList<>();
                         try {
+                            // Envia mensagens que possa ter guardadas para o novo no
                             if(messages.containsKey(ip)){
                                 toDelete.clear();
                                 for ( Message ma : messages.get(ip)){
-                                    buf = ma.getMess().getBytes();
+                                    buf = ma.toString().getBytes();
                                     sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
                                     socket2.send(sendPacket);
                                     toDelete.add(ma);
                                 }
                                 // Remove todas as mensagens enviadas
                                 messages.get(ip).removeAll(toDelete);
-
+                                toDelete.clear();
                                 // Apenas elimina o IP da tabela de já nao houver mais mensagens para enviar
                                 if(messages.get(ip).size() == 0) {
                                     messages.remove(ip);
+                                }
+                            }
+                            // Envia os novos GET_NEWS_FROM e NEWS_FOR para as novas conexoes
+                            for (Map.Entry<Message, Integer> entry : toSend.entrySet()) {
+                                Message m = entry.getKey();
+                                Integer num = entry.getValue();
+                                if(!sent.get(m).contains(ip) && num > 0) {
+                                    buf = m.toString().getBytes();
+                                    sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
+                                    socket2.send(sendPacket);
+                                    sent.get(m).add(ip);
+                                    num--;
+                                }
+                                if(num == 0) {
+                                    sent.remove(m);
+                                    toSend.remove(m);
                                 }
                             }
                         }

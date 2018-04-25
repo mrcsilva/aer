@@ -16,25 +16,26 @@ class UnicastReceiveThread extends Thread {
     private DatagramSocket socket;
     private Map<InetAddress,No> tabela;
     private Map<InetAddress,List<Message>> messages;
+    private Map<Message, Integer> toSend;
+    private Map<Message, List<InetAddress>> sent;
     private byte[] buf;
 
-    public UnicastReceiveThread(DatagramSocket socket, Map<InetAddress,No> tabela, Map<InetAddress, List<Message>> messages) {
+    public UnicastReceiveThread(DatagramSocket socket, Map<InetAddress,No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
       this.socket = socket;
       this.tabela = tabela;
       this.messages = messages;
+      this.toSend = toSend;
+      this.sent = sent;
       this.buf = new byte[256];
   }
 
-  @Override
-  //@SuppressWarnings("unchecked")
+    @Override
     public void run() {
         try {
-            //socket = new DatagramSocket(6666);
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
             while(true){
                 socket.receive(packet);
-                InetAddress ip = InetAddress.getByName(packet.getAddress().getHostAddress().split("\\%")[0]);
                 String data = new String(packet.getData(), packet.getOffset(), packet.getLength());
 
 
@@ -66,7 +67,7 @@ class UnicastReceiveThread extends Thread {
                     }
                   }
                   else {
-                    Message m = new Message(source, dest, data, System.currentTimeMillis());
+                    Message m = new Message(source, dest, data, System.currentTimeMillis(), true);
                     if(messages.containsKey(dest)) {
                         this.messages.get(dest).add(m);
                     }
@@ -81,7 +82,7 @@ class UnicastReceiveThread extends Thread {
                     if(this.tabela.containsKey(dest)) {
                         if(this.tabela.get(dest).getSaltos() == 0) {
                             // TCP para ele proprio
-                            
+
                         }
                         else {
                             // UDP para o no final
@@ -91,7 +92,7 @@ class UnicastReceiveThread extends Thread {
                         }
                     }
                     else {
-                        Message m = new Message(source, dest, data, 0);
+                        Message m = new Message(source, dest, data, System.currentTimeMillis(), false);
                         if(messages.containsKey(dest)) {
                             this.messages.get(dest).add(m);
                         }

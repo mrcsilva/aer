@@ -6,15 +6,16 @@ class Message {
     private InetAddress ipTo;
     private String mess;
     private long timestamp;
+    // True => GET_NEWS_FROM
+    // False => NEWS_FOR
+    private Boolean type;
 
-    public Message() {
-    }
-
-    public Message(InetAddress ipFrom, InetAddress ipTo, String mess, long timestamp) {
+    public Message(InetAddress ipFrom, InetAddress ipTo, String mess, long timestamp, Boolean type) {
         this.ipFrom = ipFrom;
         this.ipTo = ipTo;
         this.mess= mess;
         this.timestamp = timestamp;
+        this.type = type;
     }
 
     //Gets
@@ -35,6 +36,15 @@ class Message {
         return this.timestamp;
     }
 
+    public String getType() {
+        if(type == true) {
+            return "GET_NEWS_FROM";
+        }
+        else {
+            return "NEWS_FOR";
+        }
+    }
+
 
     //Sets
 
@@ -52,6 +62,29 @@ class Message {
 
     public void setTime(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public void setType(String type) {
+        if(type.equals("GET_NEWS_FROM")) {
+            this.type = true;
+        }
+        else if(type.equals("NEWS_FOR")){
+            this.type = false;
+        }
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if(type == true) {
+            sb.append("GET_NEWS_FROM ");
+        }
+        else {
+            sb.append("NEWS_FOR ");
+        }
+        sb.append(ipFrom.getHostAddress() + " ");
+        sb.append(ipTo.getHostAddress() + " ");
+        sb.append(mess);
+        return sb.toString();
     }
 
 }

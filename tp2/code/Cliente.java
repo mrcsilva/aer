@@ -19,8 +19,15 @@ class Cliente {
 
             int opcao = 1;
             Scanner reader = new Scanner(System.in);
-
-              while(opcao != 0) {
+            try {
+                Socket socket = new Socket("localhost", 9999);
+                PrintWriter send = new PrintWriter(socket.getOutputStream(), true);
+                send.println("CLIENT");
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
+            while(opcao != 0) {
                 System.out.println("\nOpções");
                 System.out.println("1 - Enviar GET_NEWS_FROM");
                 System.out.println("0 - Sair\n");
@@ -31,14 +38,13 @@ class Cliente {
                             break;
                     case 1: System.out.println("Insira o endereço que pretende receber noticias:");
                             ip = reader.nextLine();
-                            GetNewsThread gn = new GetNewsThread(ip);
+                            GetNewsThread gn = new GetNewsThread(ip, socket, send);
                             gn.start();
                             break;
                     default: System.out.println("Opção inválida!");
                 }
             }
             reader.close();
-
     }
 }
 
@@ -49,10 +55,13 @@ class GetNewsThread extends Thread{
 
     private Socket socket;
     private String ip;
+    private PrintWriter send;
 
 
-    public GetNewsThread(String ip) {
+    public GetNewsThread(String ip, Socket socket, PrintWriter send) {
         this.ip = ip;
+        this.socket = socket;
+        this.send = send;
     }
 
      @Override
@@ -83,12 +92,9 @@ class GetNewsThread extends Thread{
         String data = "GET_NEWS_FROM " + source + " " + this.ip;
 
         try{
-            socket = new Socket("localhost",9999);
-            PrintWriter send = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             send.println(data);
             System.out.println("Sent: " + data);
-            socket.setSoTimeout(10000);
             String temp = in.readLine();
             System.out.println("Got news from: " + ip + "!\nNews:\n\t" + temp);
             socket.close();

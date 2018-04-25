@@ -17,70 +17,30 @@ import java.net.DatagramSocket;
 class TCPThread extends Thread {
 
     private Map<InetAddress, No> tabela;
+    private Map<InetAddress, List<Message>> messages;
     private ServerSocket ss;
     private DatagramSocket ds;
     private Socket cliente = null;
     private Socket server = null;
     private String noticia = "";
 
-    public TCPThread(Map<InetAddress, No> tabela) {
+    public TCPThread(Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages) {
         this.tabela = tabela;
+        this.messages = messages;
     }
 
-    public void setNoticia(String noticia) {
-        this.noticia = noticia;
-    }
-    /*
-    // Envia ROUTE_REQUEST
-    // @ip Endereço a descobrir
-    // @t Tempo até ao timeout
-    // @saltos Numero máximo de saltos que o pedido pode dar
-    private void sendRR(InetAddress ip, long t, int saltos) {
-        try{
-            No no = new No(ip, ip, -1, null, 0);
-            if(!tabela.containsKey(ip)) {
-                tabela.put(ip, no);
-                MulticastSocket so = new MulticastSocket(9999);
-                InetAddress group = InetAddress.getByName("FF02::1");
-                so.joinGroup(group);
-                String source = "";
-                for(No n : tabela.values()) {
-                    if(n.getSaltos() == 0) {
-                        source = n.getIp().getHostAddress();
-                        break;
-                    }
-                }
-                String data = "ROUTE_REQUEST " + source + " " + ip.getHostAddress() + " " + saltos + " " + t;
-                // System.out.println(data);
-                byte[] buf = new byte[500];
-                buf = data.getBytes();
-                DatagramPacket p = new DatagramPacket(buf, buf.length, group, 9999);
-                so.send(p);
-                so.leaveGroup(group);
-                so.close();
-            }
-        }
-        catch(Exception e) {
-            System.out.println("sendRR: ");
-            e.printStackTrace();
-        }
-    }
-    */
     @Override
     public void run() {
         Socket socket = null;
         BufferedReader in;
         String re = "";
-        InetAddress group = null;
         InetAddress dip = null;
         String source = "";
-        String viz = "";
         String dest = "";
         String data = "";
         byte[] b = new byte[1000];
         DatagramPacket packet = null;
         try {
-            group = InetAddress.getByName("FF02::1");
             ss = new ServerSocket(9999);
             ds = new DatagramSocket(9999);
         }
@@ -126,23 +86,27 @@ class TCPThread extends Thread {
                     if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
                         // Entrega ao servidor
                         if(server != null) {
-
+                            PrintWriter out = new PrintWriter(server.getOutputStream(), true);
+                            out.println(re);
                         }
                     }
                     else if(re.split(" ")[0].equals("NEWS_FOR")) {
                         // Entrega ao cliente
                         if(cliente != null) {
-
+                            PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
+                            out.println(re);
                         }
                     }
                 }
                 else {
                     // Faz N copias e envia por UDP
                     if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
-
+                        InetAddress sip = InetAddress.getByName(source);
+                        Message m = new Message(sip, dip, re.split(" ")[3], 0, true);
                     }
                     else if(re.split(" ")[0].equals("NEWS_FOR")) {
-
+                        InetAddress sip = InetAddress.getByName(source);
+                        Message m = new Message(sip, dip, re.split(" ")[3], 0, false);
                     }
 
                 }

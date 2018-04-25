@@ -20,8 +20,12 @@ class Adhoc {
 
     // Tabela com os nos atualmente adjacentes
     private static Map<InetAddress,No> tabela;
-    // Lista de mensagens a enviar
+    // Lista de mensagens para outros nos
     private static Map<InetAddress,List<Message>> messages;
+    // Lista de mensagens a enviar
+    private static Map<Message, Integer> toSend;
+    // Associacao mensagens_enviadas -> IPs enviados
+    private static Map<Message, List<InetAddress>> sent;
 
 
     public static void main(String args[]) throws Exception {
@@ -29,7 +33,9 @@ class Adhoc {
         MulticastSocket socket = new MulticastSocket(9999);
         DatagramSocket socket2 = new DatagramSocket(6666);
         tabela = new HashMap<InetAddress, No>();
-        messages = new HashMap<InetAddress,List<Message>>();
+        messages = new HashMap<InetAddress, List<Message>>();
+        toSend = new HashMap<Message, Integer>();
+        sent = new HashMap<Message, List<InetAddress>>();
 
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -59,13 +65,13 @@ class Adhoc {
         HelloSendThread hs = new HelloSendThread(socket);
         hs.start();
 
-        MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela,messages);
+        MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela,messages, toSend, sent);
         mr.start();
 
         UnicastReceiveThread ur = new UnicastReceiveThread(socket2,tabela,messages);
         ur.start();
 
-        TCPThread tt = new TCPThread(tabela);
+        TCPThread tt = new TCPThread(tabela, messages, toSend, sent);
         tt.start();
 /*
         int op = -1;

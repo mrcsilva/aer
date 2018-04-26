@@ -18,17 +18,20 @@ import java.util.List;
 class TCPThread extends Thread {
 
     private Map<InetAddress, No> tabela;
-    private Map<InetAddress, List<Message>> messages;
+    private Map<Message, Integer> toSend;
+    private Map<Message, List<InetAddress>> sent;
+    private List<String> received;
     private ServerSocket ss;
     private DatagramSocket ds;
     private Socket cliente = null;
     private Socket server = null;
-    private String noticia = "";
+    int copias;
 
-    public TCPThread(DatagramSocket ds, Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
+    public TCPThread(DatagramSocket ds, Map<InetAddress, No> tabela, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, List<String> received) {
         this.ds = ds;
         this.tabela = tabela;
-        this.messages = messages;
+        this.received = received;
+        this.copias = 5;
     }
 
     @Override
@@ -86,43 +89,67 @@ class TCPThread extends Thread {
                 if(tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
 
                     try{
-
-
-                    if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
-                        // Entrega ao servidor
-                        if(server != null) {
-                            PrintWriter out = new PrintWriter(server.getOutputStream(), true);
-                            out.println(re);
+                        if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
+                            // Entrega ao servidor
+                            if(server != null && !received.contains(re)) {
+                                PrintWriter out = new PrintWriter(server.getOutputStream(), true);
+                                out.println(re);
+                            }
+                        }
+                        else if(re.split(" ")[0].equals("NEWS_FOR")) {
+                            // Entrega ao cliente
+                            if(cliente != null && !received.contains(re)) {
+                                PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
+                                out.println(re);
+                            }
                         }
                     }
-                    else if(re.split(" ")[0].equals("NEWS_FOR")) {
-                        // Entrega ao cliente
-                        if(cliente != null) {
-                            PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
-                            out.println(re);
-                        }
-                    }
-
-                    }catch(Exception e){
+                    catch(Exception e){
                         e.printStackTrace();
                     }
                 }
                 else {
                     try{
-                    // Faz N copias e envia por UDP
-                    if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
+                        // Faz N copias e envia por UDP
                         InetAddress sip = InetAddress.getByName(source);
-                        Message m = new Message(sip, dip, re.split(" ")[3], 0, true);
+                        Message m = new Message(sip, dip, "", 0, true);
+                        if(re.split(" ")[0].equals("NEWS_FOR")) {
+                            m.setMess(re.split(" ")[3]);
+                        }
+                        No menor = null;
+                        No menor2 = null;
+                        for(No n : tabela.values()) {
+                            if(menor != null && n.getNumHellos() < menor.getNumHellos()) {
+                                menor2 = menor;
+                                menor = n;
+                            }
+                            else if(menor2 != null && n.getNumHellos() < menor2.getNumHellos()) {
+                                menor2 = n;
+                            }
+                            else if(menor == null) {
+                                menor = n;
+                            }
+                            else if(menor2 == null) {
+                                menor2 = n;
+                            }
+                        }
+                        b = m.toString().getBytes();
+                        packet = new DatagramPacket(b, b.length, dest, 6666);
+                        if(menor != null) {
+                            ds.send(packet);
+                            if(menor2 != null) {
+                                ds.send(packet);
+                                copias--;
+                            }
+                            copias--;
+                        }
+                        toSend.put(m, copias);
+                        sent.put(m, new ArrayList<InetAddress>());
+                        copias = 5;
                     }
-                    else if(re.split(" ")[0].equals("NEWS_FOR")) {
-                        InetAddress sip = InetAddress.getByName(source);
-                        Message m = new Message(sip, dip, re.split(" ")[3], 0, false);
+                    catch(Exception e){
+                        e.printStackTrace();
                     }
-
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-
                 }
             }
         }

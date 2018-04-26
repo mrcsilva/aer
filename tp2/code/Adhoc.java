@@ -69,13 +69,13 @@ class Adhoc {
         HelloSendThread hs = new HelloSendThread(socket);
         hs.start();
 
-        MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela,messages, toSend, sent);
+        MulticastReceiveThread mr = new MulticastReceiveThread(socket, socket2, tabela, messages, toSend, sent);
         mr.start();
 
-        UnicastReceiveThread ur = new UnicastReceiveThread(socket2,tabela,messages,toSend,sent,received);
+        UnicastReceiveThread ur = new UnicastReceiveThread(socket2, tabela, messages);
         ur.start();
 
-        TCPThread tt = new TCPThread(socket2,tabela, messages, toSend, sent);
+        TCPThread tt = new TCPThread(socket2, tabela, toSend, sent, received);
         tt.start();
 
         MessageCleanerThread mt = new MessageCleanerThread(messages);

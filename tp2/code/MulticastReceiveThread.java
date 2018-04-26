@@ -15,14 +15,16 @@ import java.lang.Exception;
 class MulticastReceiveThread extends Thread {
 
     private MulticastSocket socket;
+    private DatagramSocket socket2;
     private Map<InetAddress,No> tabela;
     private Map<InetAddress,List<Message>> messages;
     private Map<Message, Integer> toSend;
     private Map<Message, List<InetAddress>> sent;
     private byte[] buf;
 
-    public MulticastReceiveThread(MulticastSocket socket, Map<InetAddress,No> tabela, Map<InetAddress,List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
+    public MulticastReceiveThread(MulticastSocket socket, DatagramSocket socket2, Map<InetAddress,No> tabela, Map<InetAddress,List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
         this.socket = socket;
+        this.socket2 = socket2;
         this.tabela = tabela;
         this.messages = messages;
         this.toSend = toSend;
@@ -38,7 +40,6 @@ class MulticastReceiveThread extends Thread {
             socket.joinGroup(group);
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             No no;
-            DatagramSocket socket2 = new DatagramSocket();
             DatagramPacket sendPacket;
 
             while(true){
@@ -57,23 +58,23 @@ class MulticastReceiveThread extends Thread {
                         no = new No(ip, 0, 1, queueH, 0);
                         tabela.put(ip,no);
 
-                        HelloReceiveThread h = new HelloReceiveThread(ip,tabela,1,queueH);
+                        HelloReceiveThread h = new HelloReceiveThread(ip, tabela, 1, queueH);
                         h.start();
                         List<Message> toDelete = new ArrayList<>();
                         try {
                             // Envia mensagens que possa ter guardadas para o novo no
-                            if(messages.containsKey(ip)){
+                            if(messages.containsKey(ip)) {
                                 toDelete.clear();
-                                for ( Message ma : messages.get(ip)){
+                                for ( Message ma : messages.get(ip)) {
                                     buf = ma.toString().getBytes();
-                                    sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
+                                    sendPacket = new DatagramPacket(buf, buf.length, ip, 6666);
                                     socket2.send(sendPacket);
                                     toDelete.add(ma);
                                 }
                                 // Remove todas as mensagens enviadas
                                 messages.get(ip).removeAll(toDelete);
                                 toDelete.clear();
-                                // Apenas elimina o IP da tabela de já nao houver mais mensagens para enviar
+                                // Apenas elimina o IP da tabela se já nao houver mais mensagens para enviar
                                 if(messages.get(ip).size() == 0) {
                                     messages.remove(ip);
                                 }
@@ -84,7 +85,7 @@ class MulticastReceiveThread extends Thread {
                                 Integer num = entry.getValue();
                                 if(!sent.get(m).contains(ip) && num > 0) {
                                     buf = m.toString().getBytes();
-                                    sendPacket = new DatagramPacket(buf,buf.length, ip, 6666);
+                                    sendPacket = new DatagramPacket(buf, buf.length, ip, 6666);
                                     socket2.send(sendPacket);
                                     sent.get(m).add(ip);
                                     num--;
@@ -116,7 +117,6 @@ class MulticastReceiveThread extends Thread {
                 }
             }
         } catch (Exception io) {
-            System.out.println("EERRO " + io.getMessage());
             io.printStackTrace();
         }
 

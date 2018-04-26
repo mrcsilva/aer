@@ -16,18 +16,12 @@ class UnicastReceiveThread extends Thread {
     private DatagramSocket socket;
     private Map<InetAddress,No> tabela;
     private Map<InetAddress,List<Message>> messages;
-    private Map<Message, Integer> toSend;
-    private Map<Message, List<InetAddress>> sent;
-    private List<String> received;
     private byte[] buf;
 
-    public UnicastReceiveThread(DatagramSocket socket, Map<InetAddress,No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, List<String> received) {
+    public UnicastReceiveThread(DatagramSocket socket, Map<InetAddress,No> tabela, Map<InetAddress, List<Message>> messages) {
       this.socket = socket;
       this.tabela = tabela;
       this.messages = messages;
-      this.toSend = toSend;
-      this.sent = sent;
-      this.received = received;
       this.buf = new byte[256];
   }
 
@@ -49,7 +43,7 @@ class UnicastReceiveThread extends Thread {
                 // Tem de se ver se pode ficar:
                 // if(splited[0].equals("GET_NEWS_FROM") || splited[0].equals("NEWS_FOR"))
 
-                //Trata de mensagens Get News recebidas pelos casos :
+                // Trata de mensagens Get News recebidas pelos casos :
                 // È o recetor final e não respondeu ainda
                 // Não é o recetor final mas tem na tabela registo do destino
                 // Não está na tabela mas tem já mensagens para o destino
@@ -57,9 +51,12 @@ class UnicastReceiveThread extends Thread {
 
                 if(splited[0].equals("GET_NEWS_FROM")) {
                   if(this.tabela.containsKey(dest)) {
-                    if(this.tabela.get(dest).getSaltos() == 0 && !received.contains(data)) {
+                    if(this.tabela.get(dest).getSaltos() == 0) {
                         // TCP para ele proprio
-
+                        Socket s = new Socket("localhost", 9999);
+                        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+                        out.println(data);
+                        s.close();
                     }
                     else{
                         // UDP para o no final
@@ -69,7 +66,7 @@ class UnicastReceiveThread extends Thread {
                     }
                   }
                   else {
-                    Message m = new Message(source, dest, data, System.currentTimeMillis(), true);
+                    Message m = new Message(source, dest, "", System.currentTimeMillis(), true);
                     if(messages.containsKey(dest)) {
                         this.messages.get(dest).add(m);
                     }
@@ -84,7 +81,10 @@ class UnicastReceiveThread extends Thread {
                     if(this.tabela.containsKey(dest)) {
                         if(this.tabela.get(dest).getSaltos() == 0) {
                             // TCP para ele proprio
-
+                            Socket s = new Socket("localhost", 9999);
+                            PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+                            out.println(data);
+                            s.close();
                         }
                         else {
                             // UDP para o no final

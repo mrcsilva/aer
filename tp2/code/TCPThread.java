@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 import java.lang.InterruptedException;
 import java.util.HashMap;
 import java.net.DatagramSocket;
+import java.util.List;
 
 
 class TCPThread extends Thread {
@@ -24,7 +25,8 @@ class TCPThread extends Thread {
     private Socket server = null;
     private String noticia = "";
 
-    public TCPThread(Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages) {
+    public TCPThread(DatagramSocket ds, Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
+        this.ds = ds;
         this.tabela = tabela;
         this.messages = messages;
     }
@@ -42,7 +44,6 @@ class TCPThread extends Thread {
         DatagramPacket packet = null;
         try {
             ss = new ServerSocket(9999);
-            ds = new DatagramSocket(9999);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -83,6 +84,10 @@ class TCPThread extends Thread {
                 }
                 // Se e ele proprio ou nao
                 if(tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
+
+                    try{
+
+
                     if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
                         // Entrega ao servidor
                         if(server != null) {
@@ -97,8 +102,13 @@ class TCPThread extends Thread {
                             out.println(re);
                         }
                     }
+
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
                 }
                 else {
+                    try{
                     // Faz N copias e envia por UDP
                     if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
                         InetAddress sip = InetAddress.getByName(source);
@@ -108,6 +118,10 @@ class TCPThread extends Thread {
                         InetAddress sip = InetAddress.getByName(source);
                         Message m = new Message(sip, dip, re.split(" ")[3], 0, false);
                     }
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
 
                 }
             }

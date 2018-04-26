@@ -26,6 +26,9 @@ class Adhoc {
     private static Map<Message, Integer> toSend;
     // Associacao mensagens_enviadas -> IPs enviados
     private static Map<Message, List<InetAddress>> sent;
+    // Lista de mensagens respondidas
+    private static List<String> received;
+
 
 
     public static void main(String args[]) throws Exception {
@@ -36,6 +39,7 @@ class Adhoc {
         messages = new HashMap<InetAddress, List<Message>>();
         toSend = new HashMap<Message, Integer>();
         sent = new HashMap<Message, List<InetAddress>>();
+        received = new ArrayList<String>();
 
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -68,11 +72,14 @@ class Adhoc {
         MulticastReceiveThread mr = new MulticastReceiveThread(socket,tabela,messages, toSend, sent);
         mr.start();
 
-        UnicastReceiveThread ur = new UnicastReceiveThread(socket2,tabela,messages);
+        UnicastReceiveThread ur = new UnicastReceiveThread(socket2,tabela,messages,toSend,sent,received);
         ur.start();
 
-        TCPThread tt = new TCPThread(tabela, messages, toSend, sent);
+        TCPThread tt = new TCPThread(socket2,tabela, messages, toSend, sent);
         tt.start();
+
+        MessageCleanerThread mt = new MessageCleanerThread(messages);
+        mt.start();
 /*
         int op = -1;
         Scanner s = new Scanner(System.in);

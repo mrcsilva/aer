@@ -18,14 +18,16 @@ class UnicastReceiveThread extends Thread {
     private Map<InetAddress,List<Message>> messages;
     private Map<Message, Integer> toSend;
     private Map<Message, List<InetAddress>> sent;
+    private List<String> received;
     private byte[] buf;
 
-    public UnicastReceiveThread(DatagramSocket socket, Map<InetAddress,No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent) {
+    public UnicastReceiveThread(DatagramSocket socket, Map<InetAddress,No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, List<String> received) {
       this.socket = socket;
       this.tabela = tabela;
       this.messages = messages;
       this.toSend = toSend;
       this.sent = sent;
+      this.received = received;
       this.buf = new byte[256];
   }
 
@@ -48,14 +50,14 @@ class UnicastReceiveThread extends Thread {
                 // if(splited[0].equals("GET_NEWS_FROM") || splited[0].equals("NEWS_FOR"))
 
                 //Trata de mensagens Get News recebidas pelos casos :
-                // È o recetor final
+                // È o recetor final e não respondeu ainda
                 // Não é o recetor final mas tem na tabela registo do destino
                 // Não está na tabela mas tem já mensagens para o destino
                 // Não está na tabela nem existem mensagens para o destino
 
                 if(splited[0].equals("GET_NEWS_FROM")) {
                   if(this.tabela.containsKey(dest)) {
-                    if(this.tabela.get(dest).getSaltos() == 0) {
+                    if(this.tabela.get(dest).getSaltos() == 0 && !received.contains(data)) {
                         // TCP para ele proprio
 
                     }

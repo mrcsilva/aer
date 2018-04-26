@@ -116,7 +116,6 @@ class MulticastReceiveThread extends Thread {
                 }
             }
         } catch (Exception io) {
-            socket2.close();
             System.out.println("EERRO " + io.getMessage());
             io.printStackTrace();
         }

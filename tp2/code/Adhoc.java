@@ -80,13 +80,12 @@ class Adhoc {
 
         MessageCleanerThread mt = new MessageCleanerThread(messages);
         mt.start();
-/*
+
         int op = -1;
         Scanner s = new Scanner(System.in);
         do {
             System.out.println("------OPCOES------");
-            System.out.println("1 - Imprimir tabela de encaminhamento");
-            System.out.println("2 - Modificar noticia");
+            System.out.println("1 - Imprimir tabela de vizinhos");
             System.out.println("0 - Sair");
             op = s.nextInt();
             switch(op) {
@@ -96,15 +95,8 @@ class Adhoc {
                             Thread.sleep(10);
                         }
                         catch(Exception e) {
-                            System.out.println("Error sleeping!" + e.getMessage());
                             e.printStackTrace();
                         }
-                        break;
-                case 2: System.out.println("Escreva o que pretende:");
-                        s.nextLine();
-                        String temp = s.nextLine();
-                        tt.setNoticia(temp);
-                        System.out.println("Noticia modificada!");
                         break;
                 case 0: hs.interrupt();
                         mr.interrupt();
@@ -112,6 +104,6 @@ class Adhoc {
                         break;
             }
         } while (op != 0);
-        System.exit(0);*/
+        System.exit(0);
     }
 }

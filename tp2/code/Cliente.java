@@ -13,15 +13,15 @@ class Cliente {
 
 
     public static void main(String args[]) throws Exception {
-
-
             String ip;
+            Socket socket = null;
+            PrintWriter send = null;
 
             int opcao = 1;
             Scanner reader = new Scanner(System.in);
             try {
-                Socket socket = new Socket("localhost", 9999);
-                PrintWriter send = new PrintWriter(socket.getOutputStream(), true);
+                socket = new Socket("localhost", 9999);
+                send = new PrintWriter(socket.getOutputStream(), true);
                 send.println("CLIENT");
             }
             catch(Exception e) {

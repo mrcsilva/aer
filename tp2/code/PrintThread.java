@@ -14,10 +14,10 @@ class PrintThread extends Thread {
     @Override
     public void run() {
         try {
-            System.out.format("%30s %20s %35s %15s %15s", "No", "|", "Next hop (Vizinho)", "|", "Saltos");
+            System.out.format("%30s %20s %15s", "No", "|", "Saltos");
             System.out.println();
             for (No no : this.tabela.values()) {
-                System.out.format("%45s %5s %45s %5s %13s", no.getIp().getHostAddress().trim(), "|", no.getIpVizinho().getHostAddress().trim(), "|", no.getSaltos());
+                System.out.format("%45s %5s %13s", no.getIp().getHostAddress().trim(), "|", no.getSaltos());
                 System.out.println();
             }
             try {

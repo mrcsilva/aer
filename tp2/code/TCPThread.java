@@ -13,6 +13,7 @@ import java.lang.InterruptedException;
 import java.util.HashMap;
 import java.net.DatagramSocket;
 import java.util.List;
+import java.util.ArrayList;
 
 
 class TCPThread extends Thread {
@@ -134,7 +135,7 @@ class TCPThread extends Thread {
                             }
                         }
                         b = m.toString().getBytes();
-                        packet = new DatagramPacket(b, b.length, dest, 6666);
+                        packet = new DatagramPacket(b, b.length, InetAddress.getByName(dest), 6666);
                         if(menor != null) {
                             ds.send(packet);
                             if(menor2 != null) {

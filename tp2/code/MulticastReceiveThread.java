@@ -55,7 +55,7 @@ class MulticastReceiveThread extends Thread {
 
                         BlockingQueue<DatagramPacket> queueH = new ArrayBlockingQueue<DatagramPacket>(1000);
 
-                        no = new No(ip, 0, 1, queueH, 0);
+                        no = new No(ip, 1, 1, queueH, 0);
                         tabela.put(ip,no);
 
                         HelloReceiveThread h = new HelloReceiveThread(ip, tabela, 1, queueH);

@@ -9,6 +9,8 @@ import java.net.DatagramPacket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.lang.Exception;
+import java.net.Socket;
+import java.io.PrintWriter;
 
 
 class UnicastReceiveThread extends Thread {
@@ -71,7 +73,7 @@ class UnicastReceiveThread extends Thread {
                         this.messages.get(dest).add(m);
                     }
                     else {
-                        List message = new ArrayList<Message>();
+                        List<Message> message = new ArrayList<>();
                         message.add(m);
                         this.messages.put(dest,message);
                     }
@@ -99,7 +101,7 @@ class UnicastReceiveThread extends Thread {
                             this.messages.get(dest).add(m);
                         }
                         else {
-                            List message = new ArrayList<Message>();
+                            List<Message> message = new ArrayList<>();
                             message.add(m);
                             this.messages.put(dest,message);
                         }

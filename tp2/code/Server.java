@@ -22,6 +22,7 @@ class Server {
             e.printStackTrace();
         }
         HandleRequest hr = new HandleRequest(s, noticia);
+        hr.start();
         while(opcao != 0) {
             System.out.println("\nOpções");
             System.out.println("1 - Modificar noticia");
@@ -33,6 +34,7 @@ class Server {
                         break;
                 case 1: System.out.println("Insira a noticia:");
                         noticia = reader.nextLine();
+                        hr.setNoticia(noticia);
                         break;
                 default: System.out.println("Opção inválida!");
             }
@@ -50,6 +52,13 @@ class HandleRequest extends Thread {
     public HandleRequest(Socket s, String noticia) {
         this.s = s;
         this.noticia = noticia;
+    }
+
+    /**
+     * @param noticia the noticia to set
+     */
+    public void setNoticia(String noticia) {
+    	this.noticia = noticia;
     }
 
     @Override

@@ -8,25 +8,15 @@ import java.util.Enumeration;
 import java.net.NetworkInterface;
 import java.net.InetAddress;
 import java.lang.Exception;
+import java.net.SocketException;
 
 class Cliente {
 
-
     public static void main(String args[]) throws Exception {
             String ip;
-            Socket socket = null;
-            PrintWriter send = null;
 
             int opcao = 1;
             Scanner reader = new Scanner(System.in);
-            try {
-                socket = new Socket("localhost", 9999);
-                send = new PrintWriter(socket.getOutputStream(), true);
-                send.println("CLIENT");
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-            }
             while(opcao != 0) {
                 System.out.println("\nOpções");
                 System.out.println("1 - Enviar GET_NEWS_FROM");
@@ -38,7 +28,7 @@ class Cliente {
                             break;
                     case 1: System.out.println("Insira o endereço que pretende receber noticias:");
                             ip = reader.nextLine();
-                            GetNewsThread gn = new GetNewsThread(ip, socket, send);
+                            GetNewsThread gn = new GetNewsThread(ip);
                             gn.start();
                             break;
                     default: System.out.println("Opção inválida!");
@@ -50,22 +40,29 @@ class Cliente {
 
 
 
-
-class GetNewsThread extends Thread{
+class GetNewsThread extends Thread {
 
     private Socket socket;
     private String ip;
     private PrintWriter send;
 
 
-    public GetNewsThread(String ip, Socket socket, PrintWriter send) {
+    public GetNewsThread(String ip) {
         this.ip = ip;
-        this.socket = socket;
-        this.send = send;
     }
 
      @Override
     public void run() {
+        try {
+            socket = new Socket("localhost", 9999);
+            send = new PrintWriter(socket.getOutputStream(), true);
+            send.println("CLIENT");
+            socket.setSoTimeout(300000);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
         String source = "";
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -88,7 +85,6 @@ class GetNewsThread extends Thread{
             // throw new RuntimeException(e);
         }
 
-
         String data = "GET_NEWS_FROM " + source + " " + this.ip;
 
         try{
@@ -96,11 +92,21 @@ class GetNewsThread extends Thread{
             send.println(data);
             System.out.println("Sent: " + data);
             String temp = in.readLine();
+            String[] temp2 = temp.split(" ");
+            temp = "";
+            for(int i = 3; i < temp2.length-1; i++) {
+                temp += temp2[i] + " ";
+            }
             System.out.println("Got news from: " + ip + "!\nNews:\n\t" + temp);
             socket.close();
         }
         catch(Exception e){
-            System.out.println("Erro! " + e.getMessage());
+            if(e.getClass().isInstance(new SocketException())) {
+                System.out.println("Reading timed out!");
+            }
+            else {
+                e.printStackTrace();
+            }
         }
 
     }

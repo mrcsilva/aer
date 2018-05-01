@@ -41,6 +41,7 @@ class UnicastReceiveThread extends Thread {
                 InetAddress source = InetAddress.getByName(splited[1]);
                 InetAddress dest = InetAddress.getByName(splited[2]);
 
+                System.out.println("Recebido Unicast: " + data);
 
                 // Tem de se ver se pode ficar:
                 // if(splited[0].equals("GET_NEWS_FROM") || splited[0].equals("NEWS_FOR"))

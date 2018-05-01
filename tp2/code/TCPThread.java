@@ -18,34 +18,42 @@ import java.util.ArrayList;
 
 class TCPThread extends Thread {
 
+    // Tabela com as conexoes atuais
     private Map<InetAddress, No> tabela;
+    // Mensagens a enviar
     private Map<Message, Integer> toSend;
+    // Associaçao de mensagens com endereços (evitar envio para IPs repetidos)
     private Map<Message, List<InetAddress>> sent;
+    // Lista de mensagens respondidas
     private List<String> received;
+    // Socket a espera de conexoes na porta 9999
     private ServerSocket ss;
+    // Socket para envio de mensagens UDP
     private DatagramSocket ds;
-    private Socket cliente = null;
+    // Associação de socket do cliente com o IP destino
+    // Ira ser utilizado para envio posterior da resposta
+    private Map<Socket, String> clients = null;
+    // Socket com conexao ao servidor
     private Socket server = null;
-    int copias;
 
     public TCPThread(DatagramSocket ds, Map<InetAddress, No> tabela, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, List<String> received) {
         this.ds = ds;
         this.tabela = tabela;
         this.received = received;
-        this.copias = 5;
+        this.toSend = toSend;
+        this.sent = sent;
+        clients = new HashMap<>();
     }
 
     @Override
     public void run() {
         Socket socket = null;
+        Socket cliente = null;
         BufferedReader in;
         String re = "";
         InetAddress dip = null;
         String source = "";
         String dest = "";
-        String data = "";
-        byte[] b = new byte[1000];
-        DatagramPacket packet = null;
         try {
             ss = new ServerSocket(9999);
         }
@@ -64,12 +72,16 @@ class TCPThread extends Thread {
             }
 
             if(re.split(" ")[0].equals("SERVER")) {
+                HandleSocket hs = new HandleSocket(socket, true, ds, tabela, toSend, sent, null);
+                hs.start();
                 server = socket;
             }
             else if(re.split(" ")[0].equals("CLIENT")) {
-                cliente = socket;
+                HandleSocket hs = new HandleSocket(socket, false, ds, tabela, toSend, sent, clients);
+                hs.start();
             }
             else {
+                System.out.println("Recebido TCP: " + re);
                 // Se o que recebeu foi um GET_NEWS_FROM ou um NEWS_FOR
                 // Se receber um GET_NEWS_FROM:
                 // - Ele != Destino -> Faz N copias e envia por UDP
@@ -88,65 +100,33 @@ class TCPThread extends Thread {
                 }
                 // Se e ele proprio ou nao
                 if(tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
-
                     try{
                         if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
                             // Entrega ao servidor
                             if(server != null && !received.contains(re)) {
+                                System.out.println("Entregue ao servidor");
                                 PrintWriter out = new PrintWriter(server.getOutputStream(), true);
                                 out.println(re);
+                                received.add(re);
                             }
                         }
                         else if(re.split(" ")[0].equals("NEWS_FOR")) {
                             // Entrega ao cliente
+                            for(Map.Entry<Socket, String> entry : clients.entrySet()) {
+                                if(entry.getValue().equals(source)) {
+                                    cliente = entry.getKey();
+                                    break;
+                                }
+                            }
                             if(cliente != null && !received.contains(re)) {
+                                System.out.println("Entregue ao cliente");
                                 PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
                                 out.println(re);
+                                received.add(re);
+                                clients.remove(cliente);
+                                cliente = null;
                             }
                         }
-                    }
-                    catch(Exception e){
-                        e.printStackTrace();
-                    }
-                }
-                else {
-                    try{
-                        // Faz N copias e envia por UDP
-                        InetAddress sip = InetAddress.getByName(source);
-                        Message m = new Message(sip, dip, "", 0, true);
-                        if(re.split(" ")[0].equals("NEWS_FOR")) {
-                            m.setMess(re.split(" ")[3]);
-                        }
-                        No menor = null;
-                        No menor2 = null;
-                        for(No n : tabela.values()) {
-                            if(menor != null && n.getNumHellos() < menor.getNumHellos()) {
-                                menor2 = menor;
-                                menor = n;
-                            }
-                            else if(menor2 != null && n.getNumHellos() < menor2.getNumHellos()) {
-                                menor2 = n;
-                            }
-                            else if(menor == null) {
-                                menor = n;
-                            }
-                            else if(menor2 == null) {
-                                menor2 = n;
-                            }
-                        }
-                        b = m.toString().getBytes();
-                        packet = new DatagramPacket(b, b.length, InetAddress.getByName(dest), 6666);
-                        if(menor != null) {
-                            ds.send(packet);
-                            if(menor2 != null) {
-                                ds.send(packet);
-                                copias--;
-                            }
-                            copias--;
-                        }
-                        toSend.put(m, copias);
-                        sent.put(m, new ArrayList<InetAddress>());
-                        copias = 5;
                     }
                     catch(Exception e){
                         e.printStackTrace();
@@ -155,4 +135,123 @@ class TCPThread extends Thread {
             }
         }
     }
+}
+
+class HandleSocket extends Thread {
+
+    private Socket server;
+    private Socket client;
+    private DatagramSocket ds;
+    private Map<InetAddress, No> tabela;
+    private Map<Message, Integer> toSend;
+    private Map<Message, List<InetAddress>> sent;
+    private Map<Socket, String> clients;
+    int copias = 5;
+
+    public HandleSocket(Socket s, boolean type, DatagramSocket ds, Map<InetAddress, No> tabela, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, Map<Socket, String> clients) {
+        // True - Server
+        // False - Client
+        if(type == true) {
+            this.server = s;
+            this.client = null;
+        }
+        else {
+            this.client = s;
+            this.server = null;
+        }
+        this.ds = ds;
+        this.tabela = tabela;
+        this.toSend = toSend;
+        this.sent = sent;
+        this.clients = clients;
+    }
+
+    private void sendCopies(String re) throws Exception{
+        DatagramPacket packet = null;
+        byte[] b = null;
+        InetAddress dip;
+        InetAddress sip;
+
+        dip = InetAddress.getByName(re.split(" ")[2]);
+        sip = InetAddress.getByName(re.split(" ")[1]);
+
+        Message m = new Message(sip, dip, "", 0, true);
+        if(re.split(" ")[0].equals("NEWS_FOR")) {
+            m.setMess(re.split(" ")[3]);
+            m.setType("NEWS_FOR");
+        }
+        No menor = null;
+        No menor2 = null;
+        for(No n : tabela.values()) {
+            if(menor != null && n.getNumHellos() < menor.getNumHellos() && n.getSaltos() != 0) {
+                menor2 = menor;
+                menor = n;
+            }
+            else if(menor2 != null && n.getNumHellos() < menor2.getNumHellos() && n.getSaltos() != 0) {
+                menor2 = n;
+            }
+            else if(menor == null) {
+                menor = n;
+            }
+            else if(menor2 == null) {
+                menor2 = n;
+            }
+        }
+        b = m.toString().getBytes();
+
+        if(menor != null) {
+            packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
+            ds.send(packet);
+            if(menor2 != null) {
+                packet = new DatagramPacket(b, b.length, menor2.getIp(), 6666);
+                ds.send(packet);
+                copias--;
+            }
+            copias--;
+        }
+        toSend.put(m, copias);
+        sent.put(m, new ArrayList<InetAddress>());
+        copias = 5;
+    }
+
+    @Override
+    public void run() {
+        String re;
+
+        while(server != null) {
+            try{
+                BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()));
+                re = in.readLine();
+
+                System.out.println("Envia copias: " + re);
+                // Faz N copias e envia por UDP
+                sendCopies(re);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+                server = null;
+            }
+        }
+
+        while(client != null) {
+            try{
+                if(!client.isClosed()) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                    re = in.readLine();
+                    clients.put(client, InetAddress.getByName(re.split(" ")[2]).getHostAddress());
+                    System.out.println("Envia copias: " + re);
+                    // Faz N copias e envia por UDP
+                    sendCopies(re);
+                }
+                else {
+                    client = null;
+                }
+            }
+            catch(Exception e){
+                e.printStackTrace();
+                client = null;
+            }
+        }
+    }
+
 }

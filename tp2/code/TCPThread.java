@@ -32,6 +32,7 @@ class TCPThread extends Thread {
     private DatagramSocket ds;
     // Associação de socket do cliente com o IP destino
     // Ira ser utilizado para envio posterior da resposta
+    // Permite ter varios clientes e pedidos em simultaneo
     private Map<Socket, String> clients = null;
     // Socket com conexao ao servidor
     private Socket server = null;
@@ -72,23 +73,18 @@ class TCPThread extends Thread {
             }
 
             if(re.split(" ")[0].equals("SERVER")) {
+                // Thread que fica responsavel pela comunicacao com o servidor
                 HandleSocket hs = new HandleSocket(socket, true, ds, tabela, toSend, sent, null);
                 hs.start();
                 server = socket;
             }
             else if(re.split(" ")[0].equals("CLIENT")) {
+                // Thread responsavel pela comunicacao com o cliente
                 HandleSocket hs = new HandleSocket(socket, false, ds, tabela, toSend, sent, clients);
                 hs.start();
             }
             else {
-                System.out.println("Recebido TCP: " + re);
-                // Se o que recebeu foi um GET_NEWS_FROM ou um NEWS_FOR
-                // Se receber um GET_NEWS_FROM:
-                // - Ele != Destino -> Faz N copias e envia por UDP
-                // - Ele == Destino -> Entrega ao servidor
-                // Se receber um NEWS_FOR:
-                // - Ele != Destino -> Faz N copias e envia por UDP
-                // - Ele == Destino -> Entrega ao servidor
+                // System.out.println("Recebido TCP: " + re);
 
                 try {
                     source = InetAddress.getByName(re.split(" ")[1]).getHostAddress();
@@ -98,28 +94,34 @@ class TCPThread extends Thread {
                 catch(IOException e) {
                     e.printStackTrace();
                 }
+
+
                 // Se e ele proprio ou nao
                 if(tabela.containsKey(dip) && tabela.get(dip).getSaltos() == 0) {
                     try{
                         if(re.split(" ")[0].equals("GET_NEWS_FROM")) {
-                            // Entrega ao servidor
+                            // Se ainda existir conexao com o servidor e ainda
+                            // nao tiver sido enviada essa mensagem -> Send
                             if(server != null && !received.contains(re)) {
-                                System.out.println("Entregue ao servidor");
+                                // System.out.println("Entregue ao servidor");
                                 PrintWriter out = new PrintWriter(server.getOutputStream(), true);
                                 out.println(re);
                                 received.add(re);
                             }
                         }
                         else if(re.split(" ")[0].equals("NEWS_FOR")) {
-                            // Entrega ao cliente
+                            // Obtem o socket do cliente ao qual ira entregar a mensagem
                             for(Map.Entry<Socket, String> entry : clients.entrySet()) {
                                 if(entry.getValue().equals(source)) {
                                     cliente = entry.getKey();
                                     break;
                                 }
                             }
+
+                            // Se tiver encontrado e ainda nao tiver enviado essa mensagem
+                            // para o cliente -> Send
                             if(cliente != null && !received.contains(re)) {
-                                System.out.println("Entregue ao cliente");
+                                // System.out.println("Entregue ao cliente");
                                 PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
                                 out.println(re);
                                 received.add(re);
@@ -166,11 +168,15 @@ class HandleSocket extends Thread {
         this.clients = clients;
     }
 
+    /**
+     * Esta funcao tem como objetivo a criacao das N copias e a efetuar imediatamente
+     * o envio no maximo de duas copias, caso seja possivel
+     * @param re Mensagem a efetuar copias
+     */
     private void sendCopies(String re) throws Exception{
         DatagramPacket packet = null;
         byte[] b = null;
-        InetAddress dip;
-        InetAddress sip;
+        InetAddress dip, sip;
 
         dip = InetAddress.getByName(re.split(" ")[2]);
         sip = InetAddress.getByName(re.split(" ")[1]);
@@ -180,6 +186,8 @@ class HandleSocket extends Thread {
             m.setMess(re.split(" ")[3]);
             m.setType("NEWS_FOR");
         }
+
+        // Escolhe os dois nos ligados a menos tempo
         No menor = null;
         No menor2 = null;
         for(No n : tabela.values()) {
@@ -197,9 +205,11 @@ class HandleSocket extends Thread {
                 menor2 = n;
             }
         }
+
         b = m.toString().getBytes();
         sent.put(m, new ArrayList<InetAddress>());
 
+        // Caso existam nos na tabela envia as mensagens
         if(menor != null) {
             packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
             ds.send(packet);

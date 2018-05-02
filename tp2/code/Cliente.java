@@ -28,6 +28,7 @@ class Cliente {
                             break;
                     case 1: System.out.println("Insira o endereço que pretende receber noticias:");
                             ip = reader.nextLine();
+                            // Inicia uma thread que tratara do pedido de noticias
                             GetNewsThread gn = new GetNewsThread(ip);
                             gn.start();
                             break;
@@ -57,6 +58,10 @@ class GetNewsThread extends Thread {
             socket = new Socket("localhost", 9999);
             send = new PrintWriter(socket.getOutputStream(), true);
             send.println("CLIENT");
+            
+            // Timeout de 5 minutos (para a demonstracao)
+            // Numa aplicacao real teria de ser aumentado substancialmente
+            // ou ajustado de acordo com os padroes de movimento
             socket.setSoTimeout(300000);
         }
         catch(Exception e) {
@@ -82,7 +87,7 @@ class GetNewsThread extends Thread {
             }
         }
         catch (Exception e) {
-            // throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         String data = "GET_NEWS_FROM " + source + " " + this.ip;

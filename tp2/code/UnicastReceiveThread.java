@@ -24,7 +24,6 @@ class UnicastReceiveThread extends Thread {
       this.socket = socket;
       this.tabela = tabela;
       this.messages = messages;
-      this.buf = new byte[256];
   }
 
     @Override
@@ -36,81 +35,108 @@ class UnicastReceiveThread extends Thread {
                 socket.receive(packet);
                 String data = new String(packet.getData(), packet.getOffset(), packet.getLength());
 
-
-                String[] splited = data.split("\\s+");
-                InetAddress source = InetAddress.getByName(splited[1]);
-                InetAddress dest = InetAddress.getByName(splited[2]);
-
-                // System.out.println("Recebido Unicast: " + data);
-
-                if(splited[0].equals("GET_NEWS_FROM")) {
-                  if(this.tabela.containsKey(dest)) {
-                    if(this.tabela.get(dest).getSaltos() == 0) {
-                        // TCP para ele proprio
-                        Socket s = new Socket("localhost", 9999);
-                        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-                        out.println(data);
-                        s.close();
-                    }
-                    else{
-                        // UDP para o no final
-                        buf = data.getBytes();
-                        DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
-                        socket.send(sendPacket);
-                        // System.out.println("Sent to: " + dest.getHostAddress());
-                        // System.out.println("\tPacote: " + data);
-                    }
-                  }
-                  else {
-                    Message m = new Message(source, dest, "", System.currentTimeMillis(), true);
-                    if(messages.containsKey(dest)) {
-                        this.messages.get(dest).add(m);
-                    }
-                    else {
-                        List<Message> message = new ArrayList<>();
-                        message.add(m);
-                        this.messages.put(dest, message);
-                    }
-                  }
-                }
-                else if(splited[0].equals("NEWS_FOR")) {
-                    if(this.tabela.containsKey(dest)) {
-                        if(this.tabela.get(dest).getSaltos() == 0) {
-                            // TCP para ele proprio
-                            Socket s = new Socket("localhost", 9999);
-                            PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-                            out.println(data);
-                            s.close();
-                        }
-                        else {
-                            // UDP para o no final
-                            buf = data.getBytes();
-                            DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
-                            socket.send(sendPacket);
-                            // System.out.println("Sent to: " + dest.getHostAddress());
-                            // System.out.println("\tPacote: " + data);
-                        }
-                    }
-                    else {
-                        String temp = "";
-                        for(int i = 3; i < splited.length-1; i++) {
-                            temp += splited[i] + " ";
-                        }
-                        Message m = new Message(source, dest, temp, System.currentTimeMillis(), false);
-                        if(messages.containsKey(dest)) {
-                            this.messages.get(dest).add(m);
-                        }
-                        else {
-                            List<Message> message = new ArrayList<>();
-                            message.add(m);
-                            this.messages.put(dest, message);
-                        }
-                    }
-                }
+                // Thread auxiliar para conseguir efetuar processamento de varias mensagens em simultaneo
+                HandleUnicastPacket hp = new HandleUnicastPacket(socket, tabela, messages, data);
+                hp.start();
             }
-        } catch (Exception io) {
+        }
+        catch (Exception io) {
             io.printStackTrace();
         }
 
     }
+}
+
+class HandleUnicastPacket extends Thread {
+
+    private DatagramSocket socket;
+    private Map<InetAddress,No> tabela;
+    private Map<InetAddress,List<Message>> messages;
+    private String data;
+
+    public HandleUnicastPacket(DatagramSocket socket, Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages, String data) {
+        this.socket = socket;
+        this.tabela = tabela;
+        this.messages = messages;
+        this.data = data;
+    }
+
+    @Override
+    public void run() {
+        String[] splited = data.split("\\s+");
+        InetAddress source = InetAddress.getByName(splited[1]);
+        InetAddress dest = InetAddress.getByName(splited[2]);
+
+        // System.out.println("Recebido Unicast: " + data);
+
+        if(splited[0].equals("GET_NEWS_FROM")) {
+            // Se o pacote recebido for GET_NEWS_FROM:
+            // - Verifica se o destino consta da sua tabela e trata de enviar o pacote
+            // - Caso contrario adiciona-o a tabela de mensagens a serem enviadas
+            if(this.tabela.containsKey(dest)) {
+                // Se constar e for ele proprio
+                if(this.tabela.get(dest).getSaltos() == 0) {
+                    // Faz TCP para a porta 9999
+                    Socket s = new Socket("localhost", 9999);
+                    PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+                    out.println(data);
+                    s.close();
+                }
+                else{
+                    // Caso nao seja -> UDP para o no final
+                    buf = data.getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
+                    socket.send(sendPacket);
+                    // System.out.println("Sent to: " + dest.getHostAddress());
+                    // System.out.println("\tPacote: " + data);
+                }
+            }
+            else {
+                // Adicionar as mensagens a serem enviadas
+                Message m = new Message(source, dest, "", System.currentTimeMillis(), true);
+                if(messages.containsKey(dest)) {
+                    this.messages.get(dest).add(m);
+                }
+                else {
+                    List<Message> message = new ArrayList<>();
+                    message.add(m);
+                    this.messages.put(dest, message);
+                }
+            }
+        }
+        else if(splited[0].equals("NEWS_FOR")) {
+            // Para o NEWS_FOR o processo e o mesmo que no GET_NEWS_FROM
+            if(this.tabela.containsKey(dest)) {
+                if(this.tabela.get(dest).getSaltos() == 0) {
+                    Socket s = new Socket("localhost", 9999);
+                    PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+                    out.println(data);
+                    s.close();
+                }
+                else {
+                    buf = data.getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
+                    socket.send(sendPacket);
+                    // System.out.println("Sent to: " + dest.getHostAddress());
+                    // System.out.println("\tPacote: " + data);
+                }
+            }
+            else {
+                String temp = "";
+                for(int i = 3; i < splited.length-1; i++) {
+                    temp += splited[i] + " ";
+                }
+                Message m = new Message(source, dest, temp, System.currentTimeMillis(), false);
+                if(messages.containsKey(dest)) {
+                    this.messages.get(dest).add(m);
+                }
+                else {
+                    List<Message> message = new ArrayList<>();
+                    message.add(m);
+                    this.messages.put(dest, message);
+                }
+            }
+        }
+    }
+
 }

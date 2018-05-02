@@ -175,7 +175,7 @@ class HandleSocket extends Thread {
         dip = InetAddress.getByName(re.split(" ")[2]);
         sip = InetAddress.getByName(re.split(" ")[1]);
 
-        Message m = new Message(sip, dip, "", 0, true);
+        Message m = new Message(sip, dip, "", System.currentTimeMillis(), true);
         if(re.split(" ")[0].equals("NEWS_FOR")) {
             m.setMess(re.split(" ")[3]);
             m.setType("NEWS_FOR");
@@ -190,27 +190,31 @@ class HandleSocket extends Thread {
             else if(menor2 != null && n.getNumHellos() < menor2.getNumHellos() && n.getSaltos() != 0) {
                 menor2 = n;
             }
-            else if(menor == null) {
+            else if(menor == null && n.getSaltos() != 0) {
                 menor = n;
             }
-            else if(menor2 == null) {
+            else if(menor2 == null && n.getSaltos() != 0) {
                 menor2 = n;
             }
         }
         b = m.toString().getBytes();
+        sent.put(m, new ArrayList<InetAddress>());
 
         if(menor != null) {
             packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
             ds.send(packet);
+            sent.get(m).add(menor.getIp());
+            // System.out.println("Sent to: " + menor.getIp().getHostAddress());
             if(menor2 != null) {
                 packet = new DatagramPacket(b, b.length, menor2.getIp(), 6666);
                 ds.send(packet);
+                sent.get(m).add(menor2.getIp());
+                // System.out.println("Sent to: " + menor2.getIp().getHostAddress());
                 copias--;
             }
             copias--;
         }
         toSend.put(m, copias);
-        sent.put(m, new ArrayList<InetAddress>());
         copias = 5;
     }
 
@@ -223,9 +227,11 @@ class HandleSocket extends Thread {
                 BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()));
                 re = in.readLine();
 
-                System.out.println("Envia copias: " + re);
-                // Faz N copias e envia por UDP
-                sendCopies(re);
+                if(re != null) {
+                    // System.out.println("Envia copias: " + re);
+                    // Faz N copias e envia por UDP
+                    sendCopies(re);
+                }
             }
             catch(Exception e){
                 e.printStackTrace();
@@ -238,10 +244,12 @@ class HandleSocket extends Thread {
                 if(!client.isClosed()) {
                     BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
                     re = in.readLine();
-                    clients.put(client, InetAddress.getByName(re.split(" ")[2]).getHostAddress());
-                    System.out.println("Envia copias: " + re);
-                    // Faz N copias e envia por UDP
-                    sendCopies(re);
+                    if(re != null) {
+                        clients.put(client, InetAddress.getByName(re.split(" ")[2]).getHostAddress());
+                        // System.out.println("Envia copias: " + re);
+                        // Faz N copias e envia por UDP
+                        sendCopies(re);
+                    }
                 }
                 else {
                     client = null;

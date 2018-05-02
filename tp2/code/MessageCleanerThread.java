@@ -29,7 +29,7 @@ class MessageCleanerThread extends Thread {
                 for(Message m : l){
 
                         // Necessario alterar para ,por exemplo se passou 5 minutos apagar
-                        if(m.getTime() > 10) {
+                        if(m.getTime() > 60000) {
 
                             listaR.add(m);
                         }
@@ -37,17 +37,20 @@ class MessageCleanerThread extends Thread {
 
                 for(Message m : listaR){
 
-                    if(l.contains(m)) l.remove(m);
+                    if(l.contains(m)) {
+                        l.remove(m);
+                        System.out.println("Apagado: " + m.toString());
+                    }
                 }
             }
-            
+
             try {
                   Thread.sleep(300000); // Clean de 5 em 5 minutos
               } catch (InterruptedException e) {
                     System.out.println(e);
                 }
 
-                
+
         }
         catch (Exception io) {
 

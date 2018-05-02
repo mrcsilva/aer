@@ -8,7 +8,7 @@ import java.util.Enumeration;
 import java.net.NetworkInterface;
 import java.net.InetAddress;
 import java.lang.Exception;
-import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 class Cliente {
 
@@ -90,7 +90,7 @@ class GetNewsThread extends Thread {
         try{
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             send.println(data);
-            System.out.println("Sent: " + data);
+            // System.out.println("Sent: " + data);
             String temp = in.readLine();
             String[] temp2 = temp.split(" ");
             temp = "";
@@ -101,7 +101,7 @@ class GetNewsThread extends Thread {
             socket.close();
         }
         catch(Exception e){
-            if(e.getClass().isInstance(new SocketException())) {
+            if(e.getClass().isInstance(new SocketTimeoutException())) {
                 System.out.println("Reading timed out!");
             }
             else {

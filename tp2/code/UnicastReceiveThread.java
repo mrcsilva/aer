@@ -41,16 +41,7 @@ class UnicastReceiveThread extends Thread {
                 InetAddress source = InetAddress.getByName(splited[1]);
                 InetAddress dest = InetAddress.getByName(splited[2]);
 
-                System.out.println("Recebido Unicast: " + data);
-
-                // Tem de se ver se pode ficar:
-                // if(splited[0].equals("GET_NEWS_FROM") || splited[0].equals("NEWS_FOR"))
-
-                // Trata de mensagens Get News recebidas pelos casos :
-                // È o recetor final e não respondeu ainda
-                // Não é o recetor final mas tem na tabela registo do destino
-                // Não está na tabela mas tem já mensagens para o destino
-                // Não está na tabela nem existem mensagens para o destino
+                // System.out.println("Recebido Unicast: " + data);
 
                 if(splited[0].equals("GET_NEWS_FROM")) {
                   if(this.tabela.containsKey(dest)) {
@@ -66,6 +57,8 @@ class UnicastReceiveThread extends Thread {
                         buf = data.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
                         socket.send(sendPacket);
+                        // System.out.println("Sent to: " + dest.getHostAddress());
+                        // System.out.println("\tPacote: " + data);
                     }
                   }
                   else {
@@ -76,7 +69,7 @@ class UnicastReceiveThread extends Thread {
                     else {
                         List<Message> message = new ArrayList<>();
                         message.add(m);
-                        this.messages.put(dest,message);
+                        this.messages.put(dest, message);
                     }
                   }
                 }
@@ -94,23 +87,28 @@ class UnicastReceiveThread extends Thread {
                             buf = data.getBytes();
                             DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
                             socket.send(sendPacket);
+                            // System.out.println("Sent to: " + dest.getHostAddress());
+                            // System.out.println("\tPacote: " + data);
                         }
                     }
                     else {
-                        Message m = new Message(source, dest, data, System.currentTimeMillis(), false);
+                        String temp = "";
+                        for(int i = 3; i < splited.length-1; i++) {
+                            temp += splited[i] + " ";
+                        }
+                        Message m = new Message(source, dest, temp, System.currentTimeMillis(), false);
                         if(messages.containsKey(dest)) {
                             this.messages.get(dest).add(m);
                         }
                         else {
                             List<Message> message = new ArrayList<>();
                             message.add(m);
-                            this.messages.put(dest,message);
+                            this.messages.put(dest, message);
                         }
                     }
                 }
             }
         } catch (Exception io) {
-            System.out.println("EERRO " + io.getMessage());
             io.printStackTrace();
         }
 

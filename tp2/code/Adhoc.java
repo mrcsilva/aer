@@ -98,6 +98,14 @@ class Adhoc {
                             e.printStackTrace();
                         }
                         break;
+                case 2: System.out.println("------ MENSAGENS ------");
+                        for(Map.Entry<InetAddress, List<Message>> entry : messages.entrySet()) {
+                            System.out.println("IP: " + entry.getKey().getHostAddress());
+                            for(Message ms : entry.getValue()) {
+                                System.out.println("\t" + ms.toString());
+                            }
+                        }
+                        break;
                 case 0: hs.interrupt();
                         mr.interrupt();
                         tt.interrupt();

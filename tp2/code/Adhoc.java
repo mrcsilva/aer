@@ -106,6 +106,12 @@ class Adhoc {
                             }
                         }
                         break;
+                case 3: System.out.println("------ MY MENSAGENS ------");
+                        for(Map.Entry<Message, Integer> entry : toSend.entrySet()) {
+                            System.out.println("Mensagem: " + entry.getKey().toString());
+                            System.out.println("\tTotal: " + entry.getValue());
+                        }
+                        break;
                 case 0: hs.interrupt();
                         mr.interrupt();
                         tt.interrupt();

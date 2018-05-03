@@ -5,6 +5,7 @@ import java.util.Map;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.lang.Exception;
+import java.lang.InterruptedException;
 
 
 class HelloSendThread extends Thread {
@@ -38,7 +39,9 @@ class HelloSendThread extends Thread {
             }
         }
         catch (Exception io) {
-            io.printStackTrace();
+            if(!io.getClass().equals(new InterruptedException())) {
+                io.printStackTrace();
+            }
         }
     }
 }

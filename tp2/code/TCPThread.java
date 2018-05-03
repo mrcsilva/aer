@@ -117,7 +117,6 @@ class TCPThread extends Thread {
                                     break;
                                 }
                             }
-
                             // Se tiver encontrado e ainda nao tiver enviado essa mensagem
                             // para o cliente -> Send
                             if(cliente != null && !received.contains(re)) {
@@ -127,6 +126,16 @@ class TCPThread extends Thread {
                                 received.add(re);
                                 clients.remove(cliente);
                                 cliente = null;
+                                for(Message m : sent.keySet().toArray()) {
+                                    if(m.getIpTo().equals(InetAddress.getByName(re.split(" ")[1]))) {
+                                        sent.remove(m);
+                                    }
+                                }
+                                for(Message m : toSend.keySet().toArray()) {
+                                    if(m.getIpTo().equals(InetAddress.getByName(re.split(" ")[1]))) {
+                                        toSend.remove(m);
+                                    }
+                                }
                             }
                         }
                     }
@@ -183,7 +192,12 @@ class HandleSocket extends Thread {
 
         Message m = new Message(sip, dip, "", System.currentTimeMillis(), true);
         if(re.split(" ")[0].equals("NEWS_FOR")) {
-            m.setMess(re.split(" ")[3]);
+            String[] splited = re.split(" ");
+            String temp = "";
+            for(int i = 3; i < splited.length; i++) {
+                temp += splited[i] + " ";
+            }
+            m.setMess(temp);
             m.setType("NEWS_FOR");
         }
 
@@ -213,18 +227,34 @@ class HandleSocket extends Thread {
         if(menor != null) {
             packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
             ds.send(packet);
-            sent.get(m).add(menor.getIp());
-            // System.out.println("Sent to: " + menor.getIp().getHostAddress());
-            if(menor2 != null) {
-                packet = new DatagramPacket(b, b.length, menor2.getIp(), 6666);
-                ds.send(packet);
-                sent.get(m).add(menor2.getIp());
-                // System.out.println("Sent to: " + menor2.getIp().getHostAddress());
+            if(!menor.getIp().equals(InetAddress.getByName(m.toString().split(" ")[2]))) {
+                sent.get(m).add(menor.getIp());
                 copias--;
+                // System.out.println("Sent to: " + menor.getIp().getHostAddress());
+                if(menor2 != null) {
+                    packet = new DatagramPacket(b, b.length, menor2.getIp(), 6666);
+                    ds.send(packet);
+                    copias--;
+                    if(!menor2.getIp().equals(InetAddress.getByName(m.toString().split(" ")[2]))) {
+                        sent.get(m).add(menor2.getIp());
+                        // System.out.println("Sent to: " + menor2.getIp().getHostAddress());
+                        toSend.put(m, copias);
+                    }
+                    else {
+                        sent.remove(m);
+                    }
+                }
+                else {
+                    toSend.put(m, copias);
+                }
             }
-            copias--;
+            else {
+                toSend.put(m, copias);
+            }
         }
-        toSend.put(m, copias);
+        else {
+            toSend.put(m, copias);
+        }
         copias = 5;
     }
 
@@ -270,6 +300,7 @@ class HandleSocket extends Thread {
                 client = null;
             }
         }
+        System.out.println("Cliente/servidor fechou!");
     }
 
 }

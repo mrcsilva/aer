@@ -82,6 +82,7 @@ class MulticastReceiveThread extends Thread {
                                 }
                             }
                             // Envia os novos GET_NEWS_FROM e NEWS_FOR para as novas conexoes
+                            int remove = 0;
                             for (Map.Entry<Message, Integer> entry : toSend.entrySet()) {
                                 Message m = entry.getKey();
                                 Integer num = entry.getValue();
@@ -89,12 +90,19 @@ class MulticastReceiveThread extends Thread {
                                     buf = m.toString().getBytes();
                                     sendPacket = new DatagramPacket(buf, buf.length, ip, 6666);
                                     socket2.send(sendPacket);
-                                    sent.get(m).add(ip);
-                                    num--;
+                                    if(ip.equals(InetAddress.getByName(m.toString().split(" ")[2]))) {
+                                        remove = 1;
+                                    }
+                                    else {
+                                        sent.get(m).add(ip);
+                                        num--;
+                                        entry.setValue(num);
+                                    }
                                 }
-                                if(num == 0) {
+                                if(num == 0 || remove == 1) {
                                     sent.remove(m);
                                     toSend.remove(m);
+                                    remove = 0;
                                 }
                             }
                         }

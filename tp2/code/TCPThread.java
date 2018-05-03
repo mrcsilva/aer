@@ -126,14 +126,14 @@ class TCPThread extends Thread {
                                 received.add(re);
                                 clients.remove(cliente);
                                 cliente = null;
-                                for(Message m : sent.keySet().toArray()) {
-                                    if(m.getIpTo().equals(InetAddress.getByName(re.split(" ")[1]))) {
-                                        sent.remove(m);
+                                for(Map.Entry<Message, List<InetAddress>> entry : sent.entrySet()) {
+                                    if(entry.getKey().getIpTo().equals(InetAddress.getByName(re.split(" ")[1]))) {
+                                        sent.remove(entry.getKey());
                                     }
                                 }
-                                for(Message m : toSend.keySet().toArray()) {
-                                    if(m.getIpTo().equals(InetAddress.getByName(re.split(" ")[1]))) {
-                                        toSend.remove(m);
+                                for(Map.Entry<Message, Integer> entry : toSend.entrySet()) {
+                                    if(entry.getKey().getIpTo().equals(InetAddress.getByName(re.split(" ")[1]))) {
+                                        toSend.remove(entry.getKey());
                                     }
                                 }
                             }

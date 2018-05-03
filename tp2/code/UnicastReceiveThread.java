@@ -128,7 +128,6 @@ class HandleUnicastPacket extends Thread {
                     String temp = "";
                     for(int i = 3; i < splited.length-1; i++) {
                         temp += splited[i] + " ";
-                        System.out.println("juntou");
                     }
                     Message m = new Message(source, dest, temp, System.currentTimeMillis(), false);
                     if(messages.containsKey(dest)) {

@@ -227,6 +227,7 @@ class HandleSocket extends Thread {
         if(menor != null) {
             packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
             ds.send(packet);
+            // Menor != Destino
             if(!menor.getIp().equals(InetAddress.getByName(m.toString().split(" ")[2]))) {
                 sent.get(m).add(menor.getIp());
                 copias--;
@@ -249,7 +250,7 @@ class HandleSocket extends Thread {
                 }
             }
             else {
-                toSend.put(m, copias);
+                sent.remove(m);
             }
         }
         else {
@@ -279,7 +280,7 @@ class HandleSocket extends Thread {
             }
         }
 
-        while(client != null) {
+        if(client != null) {
             try{
                 if(!client.isClosed()) {
                     BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
@@ -292,15 +293,16 @@ class HandleSocket extends Thread {
                     }
                 }
                 else {
+                    clients.remove(client);
                     client = null;
                 }
             }
             catch(Exception e){
                 e.printStackTrace();
+                clients.remove(client);
                 client = null;
             }
         }
-        System.out.println("Cliente/servidor fechou!");
     }
 
 }

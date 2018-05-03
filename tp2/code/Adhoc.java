@@ -78,7 +78,7 @@ class Adhoc {
         TCPThread tt = new TCPThread(socket2, tabela, toSend, sent, received);
         tt.start();
 
-        MessageCleanerThread mt = new MessageCleanerThread(messages);
+        MessageCleanerThread mt = new MessageCleanerThread(messages, toSend, sent);
         mt.start();
 
         int op = -1;

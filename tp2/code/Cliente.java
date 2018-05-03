@@ -58,7 +58,7 @@ class GetNewsThread extends Thread {
             socket = new Socket("localhost", 9999);
             send = new PrintWriter(socket.getOutputStream(), true);
             send.println("CLIENT");
-            
+
             // Timeout de 5 minutos (para a demonstracao)
             // Numa aplicacao real teria de ser aumentado substancialmente
             // ou ajustado de acordo com os padroes de movimento
@@ -107,7 +107,7 @@ class GetNewsThread extends Thread {
         }
         catch(Exception e){
             if(e.getClass().isInstance(new SocketTimeoutException())) {
-                System.out.println("Reading timed out!");
+                System.out.println("Request " + data + " timed out!");
             }
             else {
                 e.printStackTrace();

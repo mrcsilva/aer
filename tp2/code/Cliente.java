@@ -26,8 +26,9 @@ class Cliente {
                 switch (opcao) {
                     case 0: System.exit(0);
                             break;
-                    case 1: System.out.println("Insira o endereço que pretende receber noticias:");
-                            ip = reader.nextLine();
+                    case 1: System.out.println("Insira o ultimo valor endereço que pretende receber noticias:");
+                            ip = "fe80::200:ff:feaa:" + reader.nextLine();
+                            System.out.println(ip);
                             // Inicia uma thread que tratara do pedido de noticias
                             GetNewsThread gn = new GetNewsThread(ip);
                             gn.start();

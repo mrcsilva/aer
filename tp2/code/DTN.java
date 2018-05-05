@@ -16,7 +16,7 @@ import java.lang.RuntimeException;
 import java.net.DatagramPacket;
 import java.util.Scanner;
 
-class Adhoc {
+class DTN {
 
     // Tabela com os nos atualmente adjacentes
     private static Map<InetAddress,No> tabela;

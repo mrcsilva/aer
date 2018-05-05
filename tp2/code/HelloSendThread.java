@@ -16,13 +16,11 @@ class HelloSendThread extends Thread {
 
     public HelloSendThread(MulticastSocket socket) {
         this.socket = socket;
-        this.buf = new byte[256];
     }
 
     public void multicastSend(String hello) throws IOException {
         InetAddress group = InetAddress.getByName("FF02::1");
         socket.joinGroup(group);
-        buf = new byte[256];
         buf = hello.getBytes();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, group, 9999);
         socket.send(packet);
@@ -35,7 +33,7 @@ class HelloSendThread extends Thread {
             while(true){
                 String hello = "HELLO";
                 multicastSend(hello);
-                Thread.sleep(2000);    // hello interval = 2 segundos
+                Thread.sleep(500);    // hello interval = 0.5 segundos
             }
         }
         catch (Exception io) {

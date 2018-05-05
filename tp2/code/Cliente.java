@@ -55,6 +55,8 @@ class GetNewsThread extends Thread {
 
      @Override
     public void run() {
+        String source = "";
+        String data = "GET_NEWS_FROM ";
         try {
             socket = new Socket("localhost", 9999);
             send = new PrintWriter(socket.getOutputStream(), true);
@@ -64,13 +66,7 @@ class GetNewsThread extends Thread {
             // Numa aplicacao real teria de ser aumentado substancialmente
             // ou ajustado de acordo com os padroes de movimento
             socket.setSoTimeout(300000);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
 
-        String source = "";
-        try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
                 NetworkInterface iface = interfaces.nextElement();
@@ -86,14 +82,9 @@ class GetNewsThread extends Thread {
                     }
                 }
             }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+            data += source + " ";
+            data += InetAddress.getByName(this.ip).getHostAddress();
 
-        String data = "GET_NEWS_FROM " + source + " " + this.ip;
-
-        try{
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             send.println(data);
             // System.out.println("Sent: " + data);

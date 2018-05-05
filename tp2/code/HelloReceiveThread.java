@@ -29,7 +29,7 @@ class HelloReceiveThread extends Thread {
 
             while (true) {
                 try {
-                    Thread.sleep(3000); // dead interval
+                    Thread.sleep(700); // dead interval
                 } catch (InterruptedException e) {
                     System.out.println(e);
                 }

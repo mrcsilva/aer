@@ -201,34 +201,40 @@ class HandleSocket extends Thread {
             m.setType("NEWS_FOR");
         }
 
-        // Escolhe os dois nos ligados a menos tempo
-        No menor = null;
-        No menor2 = null;
-        for(No n : tabela.values()) {
-            if(menor != null && n.getNumHellos() < menor.getNumHellos() && n.getSaltos() != 0) {
-                menor2 = menor;
-                menor = n;
-            }
-            else if(menor2 != null && n.getNumHellos() < menor2.getNumHellos() && n.getSaltos() != 0) {
-                menor2 = n;
-            }
-            else if(menor == null && n.getSaltos() != 0) {
-                menor = n;
-            }
-            else if(menor2 == null && n.getSaltos() != 0) {
-                menor2 = n;
-            }
-        }
-
-        b = m.toString().getBytes();
-        sent.put(m, new ArrayList<InetAddress>());
-
-        // Caso existam nos na tabela envia as mensagens
-        if(menor != null) {
-            packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
+        // Se o destino existe na tabela nao e necessario fazer copias
+        if(tabela.containsKey(dip)) {
+            b = m.toString().getBytes();
+            packet = new DatagramPacket(b, b.length, dip, 6666);
             ds.send(packet);
-            // Menor != Destino
-            if(!menor.getIp().equals(InetAddress.getByName(m.toString().split(" ")[2]))) {
+            System.out.println("Direto!");
+        }
+        else {
+            // Escolhe os dois nos ligados a menos tempo
+            No menor = null;
+            No menor2 = null;
+            for(No n : tabela.values()) {
+                if(menor != null && n.getNumHellos() < menor.getNumHellos() && n.getSaltos() != 0) {
+                    menor2 = menor;
+                    menor = n;
+                }
+                else if(menor2 != null && n.getNumHellos() < menor2.getNumHellos() && n.getSaltos() != 0) {
+                    menor2 = n;
+                }
+                else if(menor == null && n.getSaltos() != 0) {
+                    menor = n;
+                }
+                else if(menor2 == null && n.getSaltos() != 0) {
+                    menor2 = n;
+                }
+            }
+
+            b = m.toString().getBytes();
+            sent.put(m, new ArrayList<InetAddress>());
+
+            // Caso existam nos na tabela envia as mensagens
+            if(menor != null) {
+                packet = new DatagramPacket(b, b.length, menor.getIp(), 6666);
+                ds.send(packet);
                 sent.get(m).add(menor.getIp());
                 copias--;
                 // System.out.println("Sent to: " + menor.getIp().getHostAddress());
@@ -236,27 +242,13 @@ class HandleSocket extends Thread {
                     packet = new DatagramPacket(b, b.length, menor2.getIp(), 6666);
                     ds.send(packet);
                     copias--;
-                    if(!menor2.getIp().equals(InetAddress.getByName(m.toString().split(" ")[2]))) {
-                        sent.get(m).add(menor2.getIp());
-                        // System.out.println("Sent to: " + menor2.getIp().getHostAddress());
-                        toSend.put(m, copias);
-                    }
-                    else {
-                        sent.remove(m);
-                    }
-                }
-                else {
-                    toSend.put(m, copias);
+                    sent.get(m).add(menor2.getIp());
+                    // System.out.println("Sent to: " + menor2.getIp().getHostAddress());
                 }
             }
-            else {
-                sent.remove(m);
-            }
-        }
-        else {
             toSend.put(m, copias);
+            copias = 5;
         }
-        copias = 5;
     }
 
     @Override
@@ -269,7 +261,7 @@ class HandleSocket extends Thread {
                 re = in.readLine();
 
                 if(re != null) {
-                    // System.out.println("Envia copias: " + re);
+                    System.out.println("Envia copias: " + re);
                     // Faz N copias e envia por UDP
                     sendCopies(re);
                 }

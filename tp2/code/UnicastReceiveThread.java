@@ -70,7 +70,7 @@ class HandleUnicastPacket extends Thread {
             InetAddress source = InetAddress.getByName(splited[1]);
             InetAddress dest = InetAddress.getByName(splited[2]);
 
-            System.out.println("Recebido Unicast: " + data);
+            // System.out.println("Recebido Unicast: " + data);
 
             if(splited[0].equals("GET_NEWS_FROM")) {
                 // Se o pacote recebido for GET_NEWS_FROM:

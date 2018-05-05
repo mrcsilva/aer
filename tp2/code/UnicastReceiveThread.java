@@ -70,7 +70,7 @@ class HandleUnicastPacket extends Thread {
             InetAddress source = InetAddress.getByName(splited[1]);
             InetAddress dest = InetAddress.getByName(splited[2]);
 
-            // System.out.println("Recebido Unicast: " + data);
+            System.out.println("Recebido Unicast: " + data);
 
             if(splited[0].equals("GET_NEWS_FROM")) {
                 // Se o pacote recebido for GET_NEWS_FROM:
@@ -96,7 +96,7 @@ class HandleUnicastPacket extends Thread {
                 }
                 else {
                     // Adicionar as mensagens a serem enviadas
-                    Message m = new Message(source, dest, "", System.currentTimeMillis(), true);
+                    Message m = new Message(source, dest, "", Long.parseLong(splited[3]), true);
                     if(messages.containsKey(dest)) {
                         this.messages.get(dest).add(m);
                     }
@@ -126,10 +126,10 @@ class HandleUnicastPacket extends Thread {
                 }
                 else {
                     String temp = "";
-                    for(int i = 3; i < splited.length-1; i++) {
+                    for(int i = 5; i < splited.length; i++) {
                         temp += splited[i] + " ";
                     }
-                    Message m = new Message(source, dest, temp, System.currentTimeMillis(), false);
+                    Message m = new Message(source, dest, temp, Long.parseLong(splited[3]), false);
                     if(messages.containsKey(dest)) {
                         this.messages.get(dest).add(m);
                     }

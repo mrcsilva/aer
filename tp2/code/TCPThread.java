@@ -84,7 +84,7 @@ class TCPThread extends Thread {
                 hs.start();
             }
             else {
-                // System.out.println("Recebido TCP: " + re);
+                System.out.println("Recebido TCP: " + re);
 
                 try {
                     source = InetAddress.getByName(re.split(" ")[1]).getHostAddress();
@@ -187,12 +187,12 @@ class HandleSocket extends Thread {
         byte[] b = null;
         InetAddress dip, sip;
 
-        dip = InetAddress.getByName(re.split(" ")[2]);
-        sip = InetAddress.getByName(re.split(" ")[1]);
+        dip = InetAddress.getByName(re.split("\\s+")[2]);
+        sip = InetAddress.getByName(re.split("\\s+")[1]);
 
         Message m = new Message(sip, dip, "", System.currentTimeMillis(), true);
         if(re.split(" ")[0].equals("NEWS_FOR")) {
-            String[] splited = re.split(" ");
+            String[] splited = re.split("\\s+");
             String temp = "";
             for(int i = 3; i < splited.length; i++) {
                 temp += splited[i] + " ";
@@ -273,6 +273,9 @@ class HandleSocket extends Thread {
                     // Faz N copias e envia por UDP
                     sendCopies(re);
                 }
+                else {
+                    server = null;
+                }
             }
             catch(Exception e){
                 e.printStackTrace();
@@ -287,7 +290,7 @@ class HandleSocket extends Thread {
                     re = in.readLine();
                     if(re != null) {
                         clients.put(client, InetAddress.getByName(re.split(" ")[2]).getHostAddress());
-                        // System.out.println("Envia copias: " + re);
+                        System.out.println("Envia copias: " + re);
                         // Faz N copias e envia por UDP
                         sendCopies(re);
                     }

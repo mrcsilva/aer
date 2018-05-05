@@ -83,10 +83,10 @@ class Message {
         }
         sb.append(ipFrom.getHostAddress() + " ");
         sb.append(ipTo.getHostAddress() + " ");
-        if(!mess.equals("")) {
-            sb.append(mess+" ");
-        }
         sb.append(timestamp);
+        if(!mess.equals("")) {
+            sb.append(" " + mess);
+        }
         return sb.toString();
     }
 

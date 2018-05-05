@@ -100,7 +100,7 @@ class GetNewsThread extends Thread {
             String temp = in.readLine();
             String[] temp2 = temp.split(" ");
             temp = "";
-            for(int i = 3; i < temp2.length-1; i++) {
+            for(int i = 4; i < temp2.length; i++) {
                 temp += temp2[i] + " ";
             }
             System.out.println("Got news from: " + ip + "!\nNews:\n\t" + temp);

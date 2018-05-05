@@ -3,6 +3,9 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.io.PrintWriter;
 import java.io.InputStreamReader;
+import java.util.Enumeration;
+import java.net.NetworkInterface;
+import java.net.InetAddress;
 
 class Server {
 
@@ -12,15 +15,32 @@ class Server {
         Socket s = null;
         int opcao = 1;
         Scanner reader = new Scanner(System.in);
+        String source = "";
         noticia = "";
         try {
             s = new Socket("localhost", 9999);
             PrintWriter send = new PrintWriter(s.getOutputStream(), true);
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                // filters out 127.0.0.1 and inactive interfaces
+                if (iface.isLoopback() || !iface.isUp())
+                    continue;
+
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while(addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if(addr.isLinkLocalAddress()){
+                        source = InetAddress.getByName(addr.getHostAddress().split("\\%")[0]).getHostAddress();
+                    }
+                }
+            }
             send.println("SERVER");
         }
         catch(Exception e) {
             e.printStackTrace();
         }
+        System.out.println("IP: " + source);
         HandleRequest hr = new HandleRequest(s, noticia);
         hr.start();
         while(opcao != 0) {

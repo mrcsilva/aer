@@ -96,8 +96,8 @@ node n2 {
 	 ipv6 address a:0::2/128
 	!
     }
-    iconcoords {50.97421009111123 297.31725181124926}
-    labelcoords {50.97421009111123 321.31725181124926}
+    iconcoords {49.97421009111123 297.31725181124926}
+    labelcoords {49.97421009111123 321.31725181124926}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -133,7 +133,7 @@ node n3 {
 	!
     }
     iconcoords {176.46110847174833 328.14864514530865}
-    labelcoords {176.46110847174833 352.14864514530865}
+    labelcoords {176.46110847174833 351.14864514530865}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -424,6 +424,7 @@ node n11 {
 	mobmodel
 	coreapi
 	basic_range
+	ns2script
 	!
     }
     iconcoords {0 0}
@@ -443,11 +444,25 @@ node n11 {
 	custom-config-id basic_range
 	custom-command {3 3 9 9 9}
 	config {
-	range=200
+	range=120
 	bandwidth=54000000
 	jitter=0
 	delay=50000
 	error=0
+	}
+    }
+    custom-config {
+	custom-config-id ns2script
+	custom-command {10 3 11 10 10 10 10 10}
+	config {
+	file=/home/core/.core/configs/sample4.scen
+	refresh_ms=50
+	loop=1
+	autostart=
+	map=
+	script_start=
+	script_pause=
+	script_stop=
 	}
     }
 }
@@ -515,7 +530,7 @@ link l10 {
 canvas c1 {
     name {Canvas1}
     wallpaper-style {upperleft}
-    wallpaper {sample4-bg.jpg}
+    wallpaper {/home/core/.core/configs/sample4-bg.jpg}
     size {1000 750}
 }
 

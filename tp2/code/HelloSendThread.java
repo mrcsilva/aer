@@ -14,6 +14,7 @@ class HelloSendThread extends Thread {
     private MulticastSocket socket;
     private byte[] buf;
 
+    // Executa o envio de HELLO
     public HelloSendThread(MulticastSocket socket) {
         this.socket = socket;
     }

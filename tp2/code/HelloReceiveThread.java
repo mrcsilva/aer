@@ -14,6 +14,7 @@ class HelloReceiveThread extends Thread {
     private int numHellos;
     private BlockingQueue<DatagramPacket> queueH = null;
 
+    // Responsavel por fazer o processamento dos HELLO recebidos
     public HelloReceiveThread(InetAddress ip, Map<InetAddress, No> tabela, int numHellos, BlockingQueue<DatagramPacket> queueH) {
         this.ip = ip;
         this.tabela = tabela;
@@ -45,7 +46,7 @@ class HelloReceiveThread extends Thread {
                 }
                 else {
                     // Vizinho saiu do alcance
-                    // Remove-lo de seguida
+                    // Remove-o de seguida
                     this.tabela.remove(this.ip);
                     Thread.currentThread().interrupt();
                     break;

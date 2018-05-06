@@ -91,7 +91,7 @@ class HandleRequest extends Thread {
                 temp = in.readLine();
                 String[] split = temp.split(" ");
                 if(split[0].equals("GET_NEWS_FROM")) {
-                    out.println("NEWS_FOR " + split[2] + " " + split[1] + " " + noticia);
+                    out.println("NEWS_FOR " + split[2] + " " + split[1] + " " + split[3] + " " + noticia);
                 }
             }
         }

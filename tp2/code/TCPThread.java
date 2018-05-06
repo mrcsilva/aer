@@ -20,7 +20,9 @@ class TCPThread extends Thread {
 
     // Tabela com as conexoes atuais
     private Map<InetAddress, No> tabela;
-    // Mensagens a enviar
+    // Mensagens a serem entregues diretamente
+    private Map<InetAddress, List<Message>> messages;
+    // Mensagens a enviar para vizinhos
     private Map<Message, Integer> toSend;
     // Associaçao de mensagens com endereços (evitar envio para IPs repetidos)
     private Map<Message, List<InetAddress>> sent;
@@ -37,9 +39,10 @@ class TCPThread extends Thread {
     // Socket com conexao ao servidor
     private Socket server = null;
 
-    public TCPThread(DatagramSocket ds, Map<InetAddress, No> tabela, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, List<String> received) {
+    public TCPThread(DatagramSocket ds, Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, List<String> received) {
         this.ds = ds;
         this.tabela = tabela;
+        this.messages = messages;
         this.received = received;
         this.toSend = toSend;
         this.sent = sent;
@@ -74,13 +77,13 @@ class TCPThread extends Thread {
 
             if(re.split(" ")[0].equals("SERVER")) {
                 // Thread que fica responsavel pela comunicacao com o servidor
-                HandleSocket hs = new HandleSocket(socket, true, ds, tabela, toSend, sent, null);
+                HandleSocket hs = new HandleSocket(socket, true, ds, tabela, messages, toSend, sent, null);
                 hs.start();
                 server = socket;
             }
             else if(re.split(" ")[0].equals("CLIENT")) {
                 // Thread responsavel pela comunicacao com o cliente
-                HandleSocket hs = new HandleSocket(socket, false, ds, tabela, toSend, sent, clients);
+                HandleSocket hs = new HandleSocket(socket, false, ds, tabela, messages, toSend, sent, clients);
                 hs.start();
             }
             else {
@@ -154,12 +157,13 @@ class HandleSocket extends Thread {
     private Socket client;
     private DatagramSocket ds;
     private Map<InetAddress, No> tabela;
+    private Map<InetAddress, List<Message>> messages;
     private Map<Message, Integer> toSend;
     private Map<Message, List<InetAddress>> sent;
     private Map<Socket, String> clients;
     int copias = 5;
 
-    public HandleSocket(Socket s, boolean type, DatagramSocket ds, Map<InetAddress, No> tabela, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, Map<Socket, String> clients) {
+    public HandleSocket(Socket s, boolean type, DatagramSocket ds, Map<InetAddress, No> tabela, Map<InetAddress, List<Message>> messages, Map<Message, Integer> toSend, Map<Message, List<InetAddress>> sent, Map<Socket, String> clients) {
         // True - Server
         // False - Client
         if(type == true) {
@@ -172,6 +176,7 @@ class HandleSocket extends Thread {
         }
         this.ds = ds;
         this.tabela = tabela;
+        this.messages = messages;
         this.toSend = toSend;
         this.sent = sent;
         this.clients = clients;
@@ -194,11 +199,12 @@ class HandleSocket extends Thread {
         if(re.split(" ")[0].equals("NEWS_FOR")) {
             String[] splited = re.split("\\s+");
             String temp = "";
-            for(int i = 3; i < splited.length; i++) {
+            for(int i = 4; i < splited.length; i++) {
                 temp += splited[i] + " ";
             }
             m.setMess(temp);
             m.setType("NEWS_FOR");
+            m.setTime(Long.parseLong(splited[3]));
         }
 
         // Se o destino existe na tabela nao e necessario fazer copias
@@ -209,6 +215,14 @@ class HandleSocket extends Thread {
             System.out.println("Direto!");
         }
         else {
+            if(messages.containsKey(dip)) {
+                messages.get(dip).add(m);
+            }
+            else {
+                ArrayList<Message> a = new ArrayList<Message>();
+                a.add(m);
+                messages.put(dip, a);
+            }
             // Escolhe os dois nos ligados a menos tempo
             No menor = null;
             No menor2 = null;

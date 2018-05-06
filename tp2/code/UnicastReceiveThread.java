@@ -126,7 +126,7 @@ class HandleUnicastPacket extends Thread {
                 }
                 else {
                     String temp = "";
-                    for(int i = 5; i < splited.length; i++) {
+                    for(int i = 4; i < splited.length; i++) {
                         temp += splited[i] + " ";
                     }
                     Message m = new Message(source, dest, temp, Long.parseLong(splited[3]), false);

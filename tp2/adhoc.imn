@@ -60,8 +60,8 @@ node n1 {
 	 ipv6 address a:0::1/128
 	!
     }
-    iconcoords {186.2364578872143 137.89039496012572}
-    labelcoords {186.2364578872143 161.89039496012572}
+    iconcoords {196.0 462.0}
+    labelcoords {196.0 494.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -96,8 +96,8 @@ node n2 {
 	 ipv6 address a:0::2/128
 	!
     }
-    iconcoords {49.97421009111123 297.31725181124926}
-    labelcoords {49.97421009111123 321.31725181124926}
+    iconcoords {108.0 393.0}
+    labelcoords {108.0 425.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -132,8 +132,8 @@ node n3 {
 	 ipv6 address a:0::3/128
 	!
     }
-    iconcoords {176.46110847174833 328.14864514530865}
-    labelcoords {176.46110847174833 351.14864514530865}
+    iconcoords {14.0 541.0}
+    labelcoords {14.0 573.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -168,8 +168,8 @@ node n4 {
 	 ipv6 address a:0::4/128
 	!
     }
-    iconcoords {145.04062040794378 195.27962082775758}
-    labelcoords {145.04062040794378 219.27962082775758}
+    iconcoords {41.0 545.0}
+    labelcoords {41.0 577.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -204,8 +204,8 @@ node n5 {
 	 ipv6 address a:0::5/128
 	!
     }
-    iconcoords {137.9101266949479 257.51849231830334}
-    labelcoords {137.9101266949479 281.51849231830334}
+    iconcoords {182.0 513.0}
+    labelcoords {182.0 545.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_green.gif
@@ -240,8 +240,8 @@ node n6 {
 	 ipv6 address a:0::6/128
 	!
     }
-    iconcoords {119.15850324229558 93.2505296351548}
-    labelcoords {119.15850324229558 117.2505296351548}
+    iconcoords {122.0 524.0}
+    labelcoords {122.0 556.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_red.gif
@@ -276,8 +276,8 @@ node n7 {
 	 ipv6 address a:0::7/128
 	!
     }
-    iconcoords {79.1102256826161 50.123535235375556}
-    labelcoords {79.1102256826161 74.12353523537556}
+    iconcoords {186.0 453.0}
+    labelcoords {186.0 485.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_red.gif
@@ -312,8 +312,8 @@ node n8 {
 	 ipv6 address a:0::8/128
 	!
     }
-    iconcoords {159.90259315202974 8.220638318379141}
-    labelcoords {159.90259315202974 32.220638318379144}
+    iconcoords {6.0 411.0}
+    labelcoords {6.0 443.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_red.gif
@@ -348,8 +348,8 @@ node n9 {
 	 ipv6 address a:0::9/128
 	!
     }
-    iconcoords {150.43010603614704 165.70781621981482}
-    labelcoords {150.43010603614704 189.70781621981482}
+    iconcoords {180.0 395.0}
+    labelcoords {180.0 427.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_red.gif
@@ -384,8 +384,8 @@ node n10 {
 	 ipv6 address a:0::10/128
 	!
     }
-    iconcoords {64.19289632467826 42.49909518554088}
-    labelcoords {64.19289632467826 66.49909518554088}
+    iconcoords {148.0 357.0}
+    labelcoords {148.0 389.0}
     canvas c1
     interface-peer {eth0 n11}
     custom-image $LIBDIR/icons/normal/router_red.gif

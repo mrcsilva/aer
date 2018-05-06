@@ -75,7 +75,7 @@ class DTN {
         UnicastReceiveThread ur = new UnicastReceiveThread(socket2, tabela, messages);
         ur.start();
 
-        TCPThread tt = new TCPThread(socket2, tabela, toSend, sent, received);
+        TCPThread tt = new TCPThread(socket2, tabela, messages, toSend, sent, received);
         tt.start();
 
         MessageCleanerThread mt = new MessageCleanerThread(messages, toSend, sent);

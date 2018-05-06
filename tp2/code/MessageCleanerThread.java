@@ -30,7 +30,7 @@ class MessageCleanerThread extends Thread {
                 listaR = new ArrayList<Message>();
                 for(Message m : l){
                         // Necessario alterar para, por exemplo se passou 5 minutos apagar
-                        if(System.currentTimeMillis() - m.getTime() > 60000) {
+                        if(System.currentTimeMillis() - m.getTime() > 300000) {
                             listaR.add(m);
                         }
                 }
@@ -43,7 +43,7 @@ class MessageCleanerThread extends Thread {
             }
             listaR = new ArrayList<Message>();
             for(Map.Entry<Message, Integer> entry : toSend.entrySet()){
-                if(System.currentTimeMillis() - entry.getKey().getTime() > 60000) {
+                if(System.currentTimeMillis() - entry.getKey().getTime() > 300000) {
                     listaR.add(entry.getKey());
                 }
             }

@@ -106,8 +106,8 @@ class SendMessagesThread extends Thread {
                     buf = ma.toString().getBytes();
                     sendPacket = new DatagramPacket(buf, buf.length, ip, 6666);
                     socket2.send(sendPacket);
-                    System.out.println("Sent to: " + ip.getHostAddress());
-                    System.out.println("\tMessage: " + ma.toString());
+                    // System.out.println("Sent to: " + ip.getHostAddress());
+                    // System.out.println("\tMessage: " + ma.toString());
                     toDelete.add(ma);
                 }
                 // Remove todas as mensagens enviadas

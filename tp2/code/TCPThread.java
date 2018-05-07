@@ -87,7 +87,7 @@ class TCPThread extends Thread {
                 hs.start();
             }
             else {
-                System.out.println("Recebido TCP: " + re);
+                // System.out.println("Recebido TCP: " + re);
 
                 try {
                     source = InetAddress.getByName(re.split(" ")[1]).getHostAddress();
@@ -275,7 +275,7 @@ class HandleSocket extends Thread {
                 re = in.readLine();
 
                 if(re != null) {
-                    System.out.println("Envia copias: " + re);
+                    // System.out.println("Envia copias: " + re);
                     // Faz N copias e envia por UDP
                     sendCopies(re);
                 }
@@ -296,7 +296,7 @@ class HandleSocket extends Thread {
                     re = in.readLine();
                     if(re != null) {
                         clients.put(client, InetAddress.getByName(re.split(" ")[2]).getHostAddress());
-                        System.out.println("Envia copias: " + re);
+                        // System.out.println("Envia copias: " + re);
                         // Faz N copias e envia por UDP
                         sendCopies(re);
                     }

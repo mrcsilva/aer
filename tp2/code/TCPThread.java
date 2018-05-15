@@ -87,7 +87,7 @@ class TCPThread extends Thread {
                 hs.start();
             }
             else {
-                // System.out.println("Recebido TCP: " + re);
+                System.out.println("Recebido TCP: " + re);
 
                 try {
                     source = InetAddress.getByName(re.split(" ")[1]).getHostAddress();
@@ -106,7 +106,7 @@ class TCPThread extends Thread {
                             // Se ainda existir conexao com o servidor e ainda
                             // nao tiver sido enviada essa mensagem -> Send
                             if(server != null && !received.contains(re)) {
-                                // System.out.println("Entregue ao servidor");
+                                System.out.println("Entregue ao servidor");
                                 PrintWriter out = new PrintWriter(server.getOutputStream(), true);
                                 out.println(re);
                                 received.add(re);
@@ -123,7 +123,7 @@ class TCPThread extends Thread {
                             // Se tiver encontrado e ainda nao tiver enviado essa mensagem
                             // para o cliente -> Send
                             if(cliente != null && !received.contains(re)) {
-                                // System.out.println("Entregue ao cliente");
+                                System.out.println("Entregue ao cliente");
                                 PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
                                 out.println(re);
                                 received.add(re);
@@ -275,7 +275,7 @@ class HandleSocket extends Thread {
                 re = in.readLine();
 
                 if(re != null) {
-                    // System.out.println("Envia copias: " + re);
+                    System.out.println("Envia copias: " + re);
                     // Faz N copias e envia por UDP
                     sendCopies(re);
                 }
@@ -296,7 +296,7 @@ class HandleSocket extends Thread {
                     re = in.readLine();
                     if(re != null) {
                         clients.put(client, InetAddress.getByName(re.split(" ")[2]).getHostAddress());
-                        // System.out.println("Envia copias: " + re);
+                        System.out.println("Envia copias: " + re);
                         // Faz N copias e envia por UDP
                         sendCopies(re);
                     }

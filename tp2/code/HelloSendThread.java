@@ -34,7 +34,7 @@ class HelloSendThread extends Thread {
             while(true){
                 String hello = "HELLO";
                 multicastSend(hello);
-                Thread.sleep(500);    // hello interval = 0.5 segundos
+                Thread.sleep(20);    // hello interval = 0.5 segundos
             }
         }
         catch (Exception io) {

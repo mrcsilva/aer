@@ -70,7 +70,7 @@ class HandleUnicastPacket extends Thread {
             InetAddress source = InetAddress.getByName(splited[1]);
             InetAddress dest = InetAddress.getByName(splited[2]);
 
-            // System.out.println("Recebido Unicast: " + data);
+            System.out.println("Recebido Unicast: " + data);
 
             if(splited[0].equals("GET_NEWS_FROM")) {
                 // Se o pacote recebido for GET_NEWS_FROM:
@@ -90,8 +90,8 @@ class HandleUnicastPacket extends Thread {
                         buf = data.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
                         socket.send(sendPacket);
-                        // System.out.println("Sent to: " + dest.getHostAddress());
-                        // System.out.println("\tPacote: " + data);
+                        System.out.println("Sent to: " + dest.getHostAddress());
+                        System.out.println("\tPacote: " + data);
                     }
                 }
                 else {
@@ -120,8 +120,8 @@ class HandleUnicastPacket extends Thread {
                         buf = data.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, dest, 6666);
                         socket.send(sendPacket);
-                        // System.out.println("Sent to: " + dest.getHostAddress());
-                        // System.out.println("\tPacote: " + data);
+                        System.out.println("Sent to: " + dest.getHostAddress());
+                        System.out.println("\tPacote: " + data);
                     }
                 }
                 else {
